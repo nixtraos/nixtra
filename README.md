@@ -45,7 +45,7 @@
 
 </div>
 
-## ❓ About Project
+## About Project
 
 Nixtra is **your** Linux distribution that is fully declarative, immutable, reproducible, modular, ephemeral, mostly stable, tailored to your specific needs but without heavy bloat, extremely extensive with security measures, equipped with sane defaults, and packaged with a pleasing environment with a myriad of utilities. This is what I wanted when I started learning NixOS, and I hope that if you try this, you too will realize that it is truly something great.
 
@@ -60,7 +60,7 @@ Nixtra is a fully-featured, hardened and extensible that focuses on anonymity, p
 
 Why NixOS? Because impure system state should be volatile and the rest should be declarative and immutable. Or because of my security paranoia :p
 
-## 📚 Table of Contents
+## Table of Contents
 
 - [Features](#features)
 - [Security Features](#security-practices)
@@ -71,7 +71,7 @@ Why NixOS? Because impure system state should be volatile and the rest should be
 - [See Also](#see-also)
 - [Credits](#credits)
 
-## ⭐ Features
+## Features
 
 - Pre-installed, beautifully-riced Hyprland environment.
 - Utilities for day-to-day use, including screenshotting, recording, etc.
@@ -82,7 +82,7 @@ Why NixOS? Because impure system state should be volatile and the rest should be
 - A, lot, and I mean a **LOT** of pre-baked fixes for common NixOS issues and annoyances.
 - High-level configuration system.
 
-## 🔒 Security Features
+## Security Features
 
 Some example security features (which can be toggled on or off) Nixtra employs are:
 
@@ -116,11 +116,11 @@ Some example security features (which can be toggled on or off) Nixtra employs a
 
 For a complete list and elaboration for the above, view [SECURITY.md](SECURITY.md).
 
-## 💲 Donate
+## Donate
 
 I have put months of research into the development of this project (and most of my sanity). If you wish to support me financially and have the means to do so, feel free to check out the donation methods listed [here](https://www.quarterstar.tech/pages/donate.html).
 
-## 🖥️ Software
+## Software
 
 Nixtra comes with software bundles for:
 
@@ -135,17 +135,17 @@ Nixtra comes with software bundles for:
 - Social Media Applications
 - ...and more
 
-## 👤 User Accounts
+## User Accounts
 
 The Nixtra environment is intended to be used as a single-user system. A default `user` account configuration is provided. However, the user may pick a profile based on their software and hardware needs.
 
-## ⚙️ Configuration
+## Configuration
 
 Nixtra is a single-user NixOS configuration, but the user may have multiple profiles. It follows the philosophy of "one system, many configurations." You could have a profile for each machine you own, or maybe compose different ones for a single running system. It is entirely up to you how you will make use of Nixtra's modular profile system.
 
 For more information, refer to the [configuration page](./docs/02-configuration.md).
 
-## 🚧 Project Structure
+## Project Structure
 
 - `profiles`: configuration for the [profiles mechanism](./docs/02-configuration.md).
 - `config`: non-nix configurations for applications. [Read More](./docs/01-configuration.md)
@@ -153,11 +153,11 @@ For more information, refer to the [configuration page](./docs/02-configuration.
 - `modules/system`: all system-level services, applications and configurations.
 - `modules/userspace`: all the installed userspace applications and configurations.
 
-## ⚓ See Also
+## See Also
 
 - [My Nix-related Articles](https://www.quarterstar.tech/pages/articles)
 
-## 🔗 Credits
+## Credits
 
 Nixtra wouldn't have been possible without publicly-available royalty-free assets and open source projects 🙌
 
@@ -185,7 +185,7 @@ Some small utilities and scripts may have credits directly embedded into their r
 
 PSA: If you are a contributor to Nixtra, giving credits isn't only important to uphold values and maintain legitimacy, but also to trace back the origin of the code if any subsequent issues arise!
 
-## 📜 License
+## License
 
 All Nixtra code included in this repository is licensed under the terms of the [GNU Affero General Public License](LICENSE). Further, all text including, but not limited to:
 
@@ -197,7 +197,7 @@ are licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-
 
 All third-party open source projects that are subject to copyleft obligations have their license included in the [licenses](licenses) directory.
 
-## ⚠️ Liability Disclaimer
+## Liability Disclaimer
 
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
 APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
