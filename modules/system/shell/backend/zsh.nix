@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  config = lib.mkIf (config.nixtra.user.shell == "zsh") {
+  config = lib.mkIf (config.nixtra.user.shell.backend == "zsh") {
     environment.systemPackages = with pkgs; [ direnv ];
 
     programs.zsh = {
@@ -16,6 +16,10 @@
           [ "git" "copyfile" "copybuffer" "dirhistory" "history" "direnv" ];
         theme = "robbyrussell";
       };
+
+      shellInit = lib.concatStringsSep "\n"
+        (lib.mapAttrsToList (name: value: ''export ${name}="${value}"'')
+          config.nixtra.user.shell.environmentVariables);
 
       interactiveShellInit = lib.mkOrder 1500 ''
         if command -v nix-your-shell > /dev/null; then

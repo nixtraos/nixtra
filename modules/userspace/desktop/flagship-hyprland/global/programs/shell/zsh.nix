@@ -8,15 +8,26 @@
 
     programs.zsh = {
       enable = true;
-      plugins = [{
-        name = "zsh-autocomplete"; # completes history, commands, etc.
-        src = pkgs.fetchFromGitHub {
-          owner = "marlonrichert";
-          repo = "zsh-autocomplete";
-          rev = "762afacbf227ecd173e899d10a28a478b4c84a3f";
-          sha256 = "1357hygrjwj5vd4cjdvxzrx967f1d2dbqm2rskbz5z1q6jri1hm3";
-        }; # e.g., nix-prefetch-url --unpack https://github.com/marlonrichert/zsh-autocomplete/archive/762afacbf227ecd173e899d10a28a478b4c84a3f.tar.gz
-      }];
+      plugins = [
+        {
+          name = "zsh-autocomplete"; # completes history, commands, etc.
+          src = pkgs.fetchFromGitHub {
+            owner = "marlonrichert";
+            repo = "zsh-autocomplete";
+            rev = "762afacbf227ecd173e899d10a28a478b4c84a3f";
+            sha256 = "1357hygrjwj5vd4cjdvxzrx967f1d2dbqm2rskbz5z1q6jri1hm3";
+          }; # e.g., nix-prefetch-url --unpack https://github.com/marlonrichert/zsh-autocomplete/archive/762afacbf227ecd173e899d10a28a478b4c84a3f.tar.gz
+        }
+        {
+          name = "zsh-vi-man";
+          src = pkgs.fetchFromGitHub {
+            owner = "TunaCuma";
+            repo = "zsh-vi-man";
+            rev = "397b5440e14d9ee92d30d6ed508ce97dfe43c2ff";
+            sha256 = "sha256-SEt61tHmwK7dowoY1Vjgv8mfgG7KrMz+/bGogjsfGIk=";
+          };
+        }
+      ];
 
       oh-my-zsh = {
         enable = true;
@@ -24,7 +35,7 @@
         extraConfig = ''
           # Required for autocomplete with box: https://unix.stackexchange.com/a/778868
           zstyle ':completion:*' completer _expand _complete _ignored _approximate _expand_alias
-          zstyle ':autocomplete:*' default-context curcontext 
+          zstyle ':autocomplete:*' default-context curcontext
           zstyle ':autocomplete:*' min-input 0
 
           setopt HIST_FIND_NO_DUPS
@@ -48,6 +59,9 @@
 
         # zsh-autocomplete
         bindkey -M menuselect '^M' .accept-line # run code when selected completion
+
+        # Vi mode with Esc
+        #bindkey -v
       '';
     };
 

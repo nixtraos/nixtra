@@ -5,7 +5,6 @@ createCommand {
   buildInputs = with pkgs; [
     kernel-hardening-checker
     lynis
-    chkrootkit
     clamav
     aide
     # TODO: wait for rkhunter support to be merged to upstream nixpkgs
@@ -45,9 +44,6 @@ createCommand {
       echo "Lynis:"
       lynis audit system --quick
       cat /sys/devices/system/cpu/vulnerabilities/*
-      
-      echo -e "\nchkrootkit:"
-      chkrootkit
 
       #echo -e "\nrkhunter:"
       #rkhunter

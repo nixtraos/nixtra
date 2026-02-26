@@ -6,10 +6,11 @@
     # This is done so that the tor user is created and managed by NixOS
     services.tor = {
       enable = true;
+      #torsocks.enable = true;
       settings.SOCKSPort = 9000;
     };
 
-    systemd.services = builtins.listToAttrs ((map (service: {
+    systemd.services = builtins.listToAttrs (map (service: {
       name = "tor-${service.tag}";
       value = {
         description = "Tor Service";
@@ -29,7 +30,7 @@
           RestartSec = "30s";
         };
       };
-    }) config.nixtra.tor.services));
+    }) config.nixtra.tor.services);
 
     # Ensure the data directories exist and have the correct permissions
     system.activationScripts.torSetup = lib.concatStringsSep "\n" (map

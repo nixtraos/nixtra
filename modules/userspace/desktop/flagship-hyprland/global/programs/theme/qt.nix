@@ -2,7 +2,8 @@
 
 { config, lib, pkgs, ... }:
 
-{
+let cfg = config.nixtra.desktop.theme.qt;
+in {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
     qt = {
       enable = true;
@@ -14,11 +15,13 @@
     xdg.configFile = {
       "Kvantum/kvantum.kvconfig".text = ''
         [General]
-        theme=GraphiteNordDark
+        theme=${cfg.selection}
       '';
+    };
 
-      "Kvantum/GraphiteNord".source =
-        "${pkgs.graphite-kde-theme}/share/Kvantum/GraphiteNord";
+    home.file.".config/Kvantum" = {
+      source = "${cfg.package}/share/Kvantum";
+      recursive = true;
     };
 
     home.sessionVariables = {

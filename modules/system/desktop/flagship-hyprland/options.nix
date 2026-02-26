@@ -80,7 +80,7 @@ in {
         {
           name = "Virtual Machine";
           icon = "";
-          programs = [ ".virt-manager-wrapped" ];
+          programs = [ ".virt-manager-wrapped" "com.usebottles.bottles" ];
         }
         {
           name = "Communication";

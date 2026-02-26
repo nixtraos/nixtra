@@ -39,7 +39,7 @@ let
     redact_dates() {
       COMMIT_DATE=$(${pkgs.git}/bin/git show -s --format=%ad --date=iso-strict "$1")
       REDACTED_DATE="''${COMMIT_DATE%%T*}T00:00:00+00:00"
-      
+
       ${pkgs.git}/bin/git filter-branch \
         --force \
         --env-filter \
@@ -113,6 +113,9 @@ in {
     # Safety checks
     receive.denyNonFastForwards = true;
     receive.denyDeletes = true;
+
+    # Automatically create origin upstream on first push
+    push.autoSetupRemote = true;
   };
 
   environment.etc."git-templates/hooks/post-commit" = {

@@ -9,3 +9,4 @@ ignore restrict-namespaces
 include /etc/firejail/common.inc
 
 whitelist ${HOME}/.config/FreeTube
+whitelist ${HOME}/.config/dconf

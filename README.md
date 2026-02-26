@@ -62,16 +62,14 @@ Why NixOS? Because impure system state should be volatile and the rest should be
 
 ## 📚 Table of Contents
 
-- [Features](##features)
-- [Security Features](##security_practices)
-- [Donate](##donate)
-- [User Accounts](##user)
-- [Profiles Accounts](##profiles)
-- [Configuration](##configuration)
-- [Default Profiles](##default)
-- [Project Structure](##project)
-- [See Also](##see)
-- [Credits](##credits)
+- [Features](#features)
+- [Security Features](#security-practices)
+- [Donate](#donate)
+- [User Accounts](#user)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [See Also](#see-also)
+- [Credits](#credits)
 
 ## ⭐ Features
 
@@ -157,7 +155,7 @@ For more information, refer to the [configuration page](./docs/02-configuration.
 
 ## ⚓ See Also
 
-- [My Nix-related Articles]()
+- [My Nix-related Articles](https://www.quarterstar.tech/pages/articles)
 
 ## 🔗 Credits
 
@@ -181,6 +179,7 @@ All of the works below have been heavily modified to accommodate the needs of th
 - [gitlab:usmcamp0811/dotfiles](https://gitlab.com/usmcamp0811/dotfiles) - Examples for templates, building NixOS ISOs
 - [gist.github:theprojectsomething](https://gist.github.com/theprojectsomething/6813b2c27611be03e67c78d936b0f760) & [github:AmadeusWM/dotfiles-hyprland](https://github.com/AmadeusWM/dotfiles-hyprland) - Rice for Firefox
 - [github:chiraag-nataraj/firejail-profiles](https://github.com/chiraag-nataraj/firejail-profiles): A curated set of Firejail profiles for common applications
+- [github:wochap/nix-config](https://github.com/wochap/nix-config): Configuration for [FHS Compatibility Mode](https://github.com/wochap/nix-config/blob/main/modules/nixos/system/fhs-compat/default.nix)
 
 Some small utilities and scripts may have credits directly embedded into their respective files in Nixtra's codebase.
 

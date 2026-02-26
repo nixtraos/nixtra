@@ -156,7 +156,7 @@ in {
             "general.smoothScroll.currentVelocityWeighting" = "1.0";
             "general.smoothScroll.stopDecelerationWeighting" = "1.0";
 
-            # adjust multiply factor for mousewheel - or set to false if scrolling is way too fast  
+            # adjust multiply factor for mousewheel - or set to false if scrolling is way too fast
             "mousewheel.system_scroll_override.horizontal.factor" = 200;
             "mousewheel.system_scroll_override.vertical.factor" = 200;
             "mousewheel.system_scroll_override_on_root_content.enabled" = true;
@@ -203,6 +203,7 @@ in {
             with inputs.firefox-addons.packages.${profileSettings.arch};
             [
               ublock-origin
+              stylus
               decentraleyes
               canvasblocker
               #clearcache
@@ -219,6 +220,10 @@ in {
               multi-account-containers
               noscript
               nighttab
+              redirector
+              nopow
+              #tranquility
+              unpaywall
               #chameleon
             ] ++ (if config.nixtra.display.themeType == "dark" then
               [
@@ -511,6 +516,81 @@ in {
               };
             };
 
+            # Redirector
+            "redirector@einaregilsson.com" = {
+              force = true;
+              settings = {
+                disabled = false;
+                redirects = [
+                  {
+                    appliesTo = [ "main_frame" ];
+                    description = "Reddit to Old Reddit";
+                    disabled = false;
+                    error = null;
+                    exampleResult = "https://old.reddit.com/";
+                    exampleUrl = "https://www.reddit.com/";
+                    excludePattern = "";
+                    grouped = false;
+                    includePattern = "https://www.reddit.com/*";
+                    patternDesc = "";
+                    patternType = "W";
+                    processMatches = "noProcessing";
+                    redirectUrl = "https://old.reddit.com/$1";
+                  }
+                  {
+                    appliesTo = [ "main_frame" ];
+                    description = "X (Twitter) to Nitter instance";
+                    disabled = false;
+                    error = null;
+                    exampleResult = "https://nitter.net/";
+                    exampleUrl = "https://x.com/";
+                    excludePattern = "";
+                    grouped = false;
+                    includePattern = "https://x.com/*";
+                    patternDesc = "";
+                    patternType = "W";
+                    processMatches = "noProcessing";
+                    redirectUrl = "https://nitter.net/$1";
+                  }
+                  {
+                    appliesTo = [ "main_frame" ];
+                    description = "Instagram to Imginn";
+                    disabled = false;
+                    error = null;
+                    exampleResult = "https://imginn.com/";
+                    exampleUrl = "https://www.instagram.com/";
+                    excludePattern = "";
+                    grouped = false;
+                    includePattern = "https://www.instagram.com/*";
+                    patternDesc = "";
+                    patternType = "W";
+                    processMatches = "noProcessing";
+                    redirectUrl = "https://imginn.com/$1";
+                  }
+                  {
+                    appliesTo = [ "main_frame" ];
+                    description = "Old NixOS Wiki to New NixOS Wiki";
+                    disabled = false;
+                    error = null;
+                    exampleResult = "https://nixos.wiki/";
+                    exampleUrl = "https://nixos.wiki/";
+                    excludePattern = "";
+                    grouped = false;
+                    includePattern = "https://nixos.wiki/*";
+                    patternDesc = "";
+                    patternType = "W";
+                    processMatches = "noProcessing";
+                    redirectUrl = "https://wiki.nixos.org/$1";
+                  }
+                ];
+              };
+            };
+
+            # Stylus
+            "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = {
+
+            };
+
             # Tree Style Tab
             "treestyletab@piro.sakura.ne.jp" = {
               force = true;
@@ -541,11 +621,17 @@ in {
         };
         search = {
           force = true;
-          default = "DuckDuckGo Lite";
-          privateDefault = "DuckDuckGo Lite";
-          order = [ "DuckDuckGo Lite" "ddg" ];
+          default = "SearXNG"; # DuckDuckGo Lite
+          privateDefault = "SearXNG"; # DuckDuckGo Lite
+          order = [ "SearXNG" "DuckDuckGo Lite" "ddg" ];
 
           engines = {
+            "SearXNG" = {
+              urls = [{
+                template = "http://127.0.0.1:8888/search?q={searchTerms}";
+              }];
+              definedAliases = [ "@searx" ];
+            };
             "DuckDuckGo Lite" = {
               urls = [{
                 template = "https://start.duckduckgo.com/lite?q={searchTerms}";

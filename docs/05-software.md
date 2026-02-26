@@ -73,6 +73,11 @@ Below is the curated list of software that comes with Nixtra and the purpose tha
 
 - Ollama: various open weight local models
 
+### Password & Backup Management
+
+- KeepassXC: offline password manager
+- Cryptomator: client-side encryption tool for protecting files before they are sent to cloud
+
 ### Specialized
 
 #### Programming

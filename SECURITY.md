@@ -9,9 +9,9 @@
 
 - Secure Boot: prevent bootkits, firmware rootkits, and evil maid attacks
 - Full Disk Encryption: mitigate physical data theft
-- zram: encrypt the system memory 
+- zram: encrypt the system memory
 - zswap: encrypt the swap file on the disk (disk memory); prevent cold boot attacks
-- Impermanence: make configs, data, cache, etc on the filesystem ephemeral; reset on boot unless whitelisted
+- Impermanence: make configs, data, cache, etc on the filesystem ephemeral; reset on boot unless whitelisted (TODO)
 - Hardened Linux Kernel: specially packaged kernel with security flags
 - Strict Kernel Parameters: boot flags and sysctl flags for attack mitigation, network optimization, and attack surface reduction
 - Sandboxed Core Systemd Services: mitigate attacks from critical systemd services that have root with systemd sandboxing
@@ -26,10 +26,12 @@
 - Immutable users: disallow modifying user permissions imperatively (declarative user configuration only)
 - Firejail: userspace-level app sandboxing for pre-installed applications (lutris, librewolf, etc)
 - AppArmor: kernel-level sandboxing for many applications (wip)
-- Auditd: 
+- Searx: metasearch engine (ensures search engine do not fingerprint input events or collect metadata); automatically used in pre-installed browsers like LibreWolf
 - Wazuh (TODO)
 - Zeek + Suricata (TODO)
 - Graylog or Elastic Stack (TODO)
+- Tor: multiple Tor Browser flavors with compartmentalized network traffic (distinct Tor instances), each for specific use cases
+- Network Neighbor Index (NNI): Nixtra subsystem that monitors devices connected to the same network, checks their accessible ports, and determines whether the running services are vulnerable (TODO)
 
 ### Imperativity
 

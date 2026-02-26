@@ -14,7 +14,6 @@
     ../../../modules/userspace/pkgs/video/obs.nix
     ../../../modules/userspace/pkgs/video/owncast.nix
     ../../../modules/userspace/pkgs/editor/kdenlive.nix
-    ../../../modules/userspace/pkgs/password/keepassxc.nix
     ../../../modules/userspace/pkgs/drawing/krita.nix
     ../../../modules/userspace/pkgs/drawing/gromit.nix
     ../../../modules/userspace/pkgs/drawing/drawio.nix

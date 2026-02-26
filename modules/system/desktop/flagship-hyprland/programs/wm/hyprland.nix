@@ -16,7 +16,7 @@
       waybar # Wayland bar
       mako # Notif manager
       swww # Wallpaper daemon
-      rofi-wayland # App launcher
+      rofi # App launcher
       plymouth # Display manager dependency
       gsettings-desktop-schemas # GSettings Schemas (directory popups)
       adwaita-icon-theme
@@ -48,11 +48,13 @@
     environment.sessionVariables = {
       HYPR_PLUGIN_DIR = pkgs.symlinkJoin {
         name = "hyprland-plugins";
-        paths = with pkgs.hyprlandPlugins;
-          [
-            hyprspace
-            #hyprexpo
-          ];
+        paths = with pkgs.hyprlandPlugins; [
+          hyprspace
+          hyprtrails
+          hypr-dynamic-cursors
+          hyprfocus
+          #hyprexpo
+        ];
       };
 
       # Make Git not try to open an authorization window for pushing

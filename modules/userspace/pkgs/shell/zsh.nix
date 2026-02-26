@@ -3,7 +3,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  config = lib.mkIf (config.nixtra.user.shell == "zsh") {
+  config = lib.mkIf (config.nixtra.user.shell.backend == "zsh") {
     home.packages = with pkgs; [ oh-my-posh git ];
 
     programs.zsh = { enable = true; };

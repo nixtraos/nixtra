@@ -52,9 +52,24 @@
       keys = {
         "password" = { neededForUsers = true; };
         "ssh/hosts/laptop/publicKey" = { neededForUsers = true; };
+        "searx/secret" = { neededForUsers = true; };
+        "miniflux/admin" = {
+          format = "dotenv";
+          sopsFile = ../../secrets/miniflux.env;
+          restartUnits = [ "miniflux.service" ];
+        };
       };
     };
+
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 2121 ];
+    };
+
+    virtualization = true;
   };
+
+  performance = { monitorServices = false; };
 
   ssh = {
     enable = true;
@@ -67,12 +82,16 @@
     };
   };
 
-  scheduledTasks = [{
-    enable = true;
-    name = "system-shutdown";
-    time = "23:00";
-    action = "shutdown now";
-  }];
+  searx = { secretPath = "searx/secret"; };
+
+  scheduledTasks = [
+    # {
+    #   enable = true;
+    #   name = "system-shutdown";
+    #   time = "23:00";
+    #   action = "shutdown now";
+    # }
+  ];
 
   debug = {
     persistJournalLogs = true;

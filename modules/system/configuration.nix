@@ -13,6 +13,24 @@ let
   modulesPath = "${inputs.nixpkgs}/nixos/modules";
 
   nixtraLib = import ../lib/lib.nix { inherit config lib pkgs; };
+
+  # Stage 1: Preset integration
+  # Stage 2: Profile integration
+  basicNixtra = (import ../../presets/${profileSettings.preset}/profile.nix {
+    inherit pkgs config;
+  }) // (import ../../profiles/${settings.profile}/profile.nix {
+    inherit pkgs config;
+  });
+
+  # Stage 3: Reflection
+  reflectedNixtra = basicNixtra // (import ./reflection.nix {
+    nixtra = basicNixtra;
+    inherit pkgs;
+  });
+
+  # Stage 4: Logical validation
+  nixtra = reflectedNixtra
+    // (import ./validation.nix { nixtra = reflectedNixtra; });
 in {
   imports = [
     inputs.home-manager.nixosModules.default
@@ -73,11 +91,7 @@ in {
     _module.args = { inherit nixtraLib; };
 
     # Set the options provided by the user's profile
-    nixtra = (import ../../presets/${profileSettings.preset}/profile.nix {
-      inherit pkgs config;
-    }) // (import ../../profiles/${settings.profile}/profile.nix {
-      inherit pkgs config;
-    });
+    inherit nixtra;
 
     nix = {
       settings = {
@@ -94,6 +108,13 @@ in {
       };
       optimise.automatic = true;
       package = pkgs.nixVersions.latest;
+    };
+
+    # https://www.reddit.com/r/NixOS/comments/1ompdwi/make_the_nix_daemon_nice_to_keep_your_system
+    systemd.services.nix-daemon.serviceConfig = {
+      Nice = lib.mkForce 15;
+      IOSchedulingClass = lib.mkForce "idle";
+      IOSchedulingPriority = lib.mkForce 7;
     };
 
     # Enable NUR
@@ -122,7 +143,7 @@ in {
       lib.mkIf config.nixtra.security.virtualization true;
 
     # Define default shell for all users globally
-    users.defaultUserShell = pkgs.${config.nixtra.user.shell};
+    users.defaultUserShell = pkgs.${config.nixtra.user.shell.backend};
 
     # Enable networking
     networking.wireless.enable = false;
@@ -130,6 +151,11 @@ in {
       lib.mkIf config.nixtra.security.networking true;
     networking.networkmanager.ethernet.macAddress =
       lib.mkIf config.nixtra.anonymity.spoofMacAddress "random";
+
+    # networking.hosts = {
+    #   "127.0.0.1" = [ "localhost" profileSettings.hostname ];
+    #   "::1" = [ "localhost" profileSettings.hostname ];
+    # };
 
     # Spoof network host ID
     # MAY cause issues with ZFS

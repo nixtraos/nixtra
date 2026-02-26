@@ -315,8 +315,14 @@ in {
           Use `empty` if you want to cherry-pick individual desktop configs in home.nix.
         '');
 
-      shell = mkNixtraOption (lib.types.enum [ "zsh" "fish" "bash" ]) "zsh"
-        (lib.mdDoc "Available options: `zsh` (recommended), `fish`, `bash`.");
+      shell = {
+        backend = mkNixtraOption (lib.types.enum [ "zsh" "fish" "bash" ]) "zsh"
+          (lib.mdDoc "Available options: `zsh` (recommended), `fish`, `bash`.");
+
+        environmentVariables =
+          mkNixtraOption (lib.types.attrsOf lib.types.str) { }
+          "Environment variables to set at the end with the shell. This may be needed for some environment variables like `SSH_ASKPASS`.";
+      };
 
       browser = lib.mkOption {
         type = lib.types.str;
@@ -442,7 +448,7 @@ in {
       locale = mkNixtraOption lib.types.str "en_US.UTF-8"
         "The languages localization to use.";
       version =
-        mkNixtraOption lib.types.str "25.05" "The version of the NixOS system.";
+        mkNixtraOption lib.types.str "25.11" "The version of the NixOS system.";
       initialVersion = mkNixtraOption lib.types.str "25.05"
         "The initial version the NixOS system was installed on.";
 
@@ -501,6 +507,9 @@ in {
           "Seconds after which wallpaper should be switched. Default: 2 hours (120 minutes).";
       };
 
+      languages = mkNixtraOption (lib.types.listOf lib.types.str) [ "en" ]
+        "The language keyboard layouts to use in desktop environments.";
+
       keybind = {
         numpadCompatibility = mkNixtraOption lib.types.bool false
           "Whether to replace Numpad keybinds with keys compatible with most keyboards.";
@@ -509,6 +518,19 @@ in {
       topbar = {
         enable =
           mkNixtraOption lib.types.bool true "Whether to enable the top bar.";
+      };
+
+      theme = {
+        gtk = {
+
+        };
+
+        qt = {
+          package = mkNixtraOption lib.types.package pkgs.utterly-nord-plasma
+            "The package containing the Qt theme";
+          selection = mkNixtraOption lib.types.str "Utterly-Nord" (lib.mdDoc
+            "The name of a theme provided in the `share/Kvantum` directory of it.");
+        };
       };
 
       taskbar = {
@@ -633,8 +655,11 @@ in {
         "Whether to enable automatic garbage collection.";
       networking = mkNixtraOption lib.types.bool true
         "Whether to enable general networking capabilities for the system.";
-      overwriteSudoWithDoas = mkNixtraOption lib.types.bool true
+      replaceSudoWithDoas = mkNixtraOption lib.types.bool true
         "Whether to replace `sudo` command with a more lightweight alternative (`doas`).";
+
+      fhsCompatibilityMode = mkNixtraOption lib.types.bool false
+        "Whether to have compatibility with apps that use the standard Linux FHS. (Populates `/bin` and `/usr/bin`, allows running unpatched dynamic binaries.)";
 
       kernel = {
         aggressivePanic = mkNixtraOption lib.types.bool true
@@ -841,6 +866,12 @@ in {
         (lib.mdDoc "Whether to prevent OOM kernel panic with earlyoom.");
       useHugePages = mkNixtraOption lib.types.bool false
         "Whether to use larger memory pages than the default 4 KB page size; reduce TLB misses, improve memory throughput. Disabled by default because it may disable physical KASLR for certain machines.";
+      monitorServices = mkNixtraOption lib.types.bool true
+        "Whether to monitor and manage systemd services with monit service.";
+      monitorDeviceHealth = mkNixtraOption lib.types.bool true
+        "Whether to monitor device health and send critical notifications with smartd service.";
+      watchdog = mkNixtraOption lib.types.bool true
+        "Whether to enable watchdog, which checks if a serious problem has occurred and automatically restarts if so.";
     };
 
     anonymity = {
@@ -921,6 +952,8 @@ in {
       userAuthorizedKeySecrets =
         mkNixtraOption (lib.types.listOf lib.types.str) [ ]
         "List of SOPS secret names for connecting to root with authorized SSH keys";
+      useTerminalForPassword = mkNixtraOption lib.types.bool true
+        "Whether to use terminal for getting SSH passphrase.";
     };
 
     i2p = {
@@ -983,6 +1016,13 @@ in {
         }] "List of Microsocks proxy services to configure.";
     };
 
+    miniflux = {
+      enable = mkNixtraOption lib.types.bool true
+        "Whether to enable the Miniflux RSS reading frontend.";
+      adminSecret = mkNixtraOption lib.types.str "miniflux/admin"
+        "SOPS secret key name for admin environment credentials.";
+    };
+
     shell = {
       enable = mkNixtraOption lib.types.bool true
         "Whether to enable custom shell configurations.";
@@ -994,6 +1034,7 @@ in {
         ls = "${pkgs.eza}/bin/eza";
         cat = "${pkgs.bat}/bin/bat";
         df = "${pkgs.duf}/bin/duf";
+        lsblk = "${pkgs.dysk}/bin/dysk";
         #tree = "${pkgs.lstr}/bin/lstr";
         find = "${pkgs.fd}/bin/fd";
         ps = "${pkgs.procs}/bin/procs";
@@ -1071,6 +1112,13 @@ in {
           execvp permission denied error; do system-wide installation instead
           by setting "user" to `false`.
         '';
+      };
+    };
+
+    searx = {
+      secretPath = lib.mkOption {
+        type = lib.types.str;
+        description = "SOPS path to searx secret key";
       };
     };
 

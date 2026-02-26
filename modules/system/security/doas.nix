@@ -4,8 +4,7 @@ let
   graphicalSessionVariables =
     "{ PATH, USER, HOME, SHELL, DISPLAY, XAUTHORITY, WAYLAND_DISPLAY, XDG_RUNTIME_DIR, DBUS_SESSION_BUS_ADDRESS, GDK_BACKEND, QT_QPA_PLATFORM, QT_AUTO_SCREEN_SCALE_FACTOR, QT_SCALE_FACTOR, QT_SCREEN_SCALE_FACTORS, MOZ_ENABLE_WAYLAND, MOZ_DBUS_REMOTE }";
 in {
-  config = lib.mkIf config.nixtra.security.overwriteSudoWithDoas {
-    security.sudo.enable = false;
+  config = lib.mkIf config.nixtra.security.replaceSudoWithDoas {
     security.doas = {
       enable = true;
       extraConfig = ''
@@ -35,7 +34,7 @@ in {
 
     environment.systemPackages =
       [ (pkgs.writeScriptBin "sudo" ''exec doas "$@"'') ];
-  } // lib.mkIf (!config.nixtra.security.overwriteSudoWithDoas) {
-    security.sudo.enable = true;
+
+    security.sudo.enable = lib.mkForce false;
   };
 }

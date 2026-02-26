@@ -1,8 +1,6 @@
 { config, nixtraLib, lib, pkgs, ... }:
 
 let
-  rawConfig = builtins.readFile
-    ../../../../../../config/${config.nixtra.user.config}/wm/hyprland/hypr/hyprland.conf;
   backgroundConfig =
     if config.nixtra.desktop.flagship-hyprland.background.enable then ''
       windowrule = float, class:^${config.nixtra.desktop.flagship-hyprland.background.program}$
@@ -20,6 +18,7 @@ let
       windowrulev2 = noinitialfocus, class:^(${config.nixtra.desktop.flagship-hyprland.background.program})$
     '' else
       "";
+
   startupConfig = lib.concatStringsSep "\n"
     (map (program: "exec-once = ${program}")
       config.nixtra.desktop.startupPrograms);
@@ -90,7 +89,6 @@ let
   play-startup-sound = (nixtraLib.command.createCommand {
     name = "play-startup-sound";
     prefix = "";
-    buildInputs = with pkgs; [ ];
 
     command = ''
       # Wait until Hyprland is fully initialized
@@ -105,7 +103,12 @@ let
   });
 in {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
-    home.packages = with pkgs; [ brightnessctl ];
+    home.packages = with pkgs;
+      with hyprlandPlugins; [
+        brightnessctl
+        hyprtrails
+        hypr-dynamic-cursors
+      ];
 
     systemd.user.services.hyprshade = {
       Unit = {
@@ -234,11 +237,57 @@ in {
         ###############
 
         exec-once = hyprctl plugin load "$HYPR_PLUGIN_DIR/lib/libhyprspace.so"
+        exec-once = hyprctl plugin load "$HYPR_PLUGIN_DIR/lib/libhyprtrails.so"
+        exec-once = hyprctl plugin load "$HYPR_PLUGIN_DIR/lib/libhypr-dynamic-cursors.so"
+        exec-once = hyprctl plugin load "$HYPR_PLUGIN_DIR/lib/libhyprfocus.so"
 
         plugin {
             overview {
                 showEmptyWorkspace = false
                 showNewWorkspace = false
+            }
+
+            hyprtrails {
+                color = rgba(ffffff80)
+            }
+
+            dynamic-cursors {
+                enabled = true
+                mode = tilt
+
+                shake {
+                    enabled = false
+                }
+            }
+
+            hyprfocus {
+                enabled = yes
+
+                keyboard_focus_animation = shrink
+                mouse_focus_animation = flash
+
+                bezier = bezIn, 0.5,0.0,1.0,0.5
+                bezier = bezOut, 0.0,0.5,0.5,1.0
+
+                flash {
+                    flash_opacity = 0.7
+
+                    in_bezier = bezIn
+                    in_speed = 0.5
+
+                    out_bezier = bezOut
+                    out_speed = 3
+                }
+
+                shrink {
+                    shrink_percentage = 0.8
+
+                    in_bezier = bezIn
+                    in_speed = 0.5
+
+                    out_bezier = bezOut
+                    out_speed = 3
+                }
             }
         }
 
@@ -273,6 +322,9 @@ in {
         # Start shaders
         exec = hyprshade auto
 
+        # Start screen annotator daemon
+        exec-once = wayscriber --daemon
+
         # Start blue light filter
         exec-once = hyprsunset
 
@@ -301,10 +353,13 @@ in {
         ### LOOK AND FEEL ###
         #####################
 
+        layerrule = blur, waybar
+        layerrule = ignorezero, waybar # ignore fully transparent pixels
+
         # Refer to https://wiki.hyprland.org/Configuring/Variables/
 
         # https://wiki.hyprland.org/Configuring/Variables/#general
-        general { 
+        general {
             gaps_in = 10
             gaps_out = 20
             border_size = 3
@@ -314,7 +369,7 @@ in {
             col.inactive_border = rgba(595959aa)
 
             # Set to true enable resizing windows by clicking and dragging on borders and gaps
-            resize_on_border = true 
+            resize_on_border = true
 
             # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
             allow_tearing = false
@@ -353,7 +408,12 @@ in {
                 passes = 1
                 #size = 2
                 #passes = 3
-                blurls = waybar
+                #blurls = waybar
+
+                # these two fix an issue where the blur of windows sometimes goes away
+                # when switching to a workspace, after 1 second
+                ignore_opacity = true         # treats semi-transparent surfaces as blurable
+                new_optimizations = false     # force correct repaints (can increase GPU load)
             }
         }
 
@@ -373,7 +433,7 @@ in {
             animation = workspaces, 1, 6, default
 
             # Rainbow border
-            # https://www.reddit.com/r/hyprland/comments/13h6wb9/comment/jk52j2q/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+            # https://www.reddit.com/r/hyprland/comments/13h6wb9/comment/jk52j2q
             bezier = linear, 0.0, 0.0, 1.0, 1.0
             animation = border, 1, 10, default
             animation = borderangle, 1, 100, linear, loop
@@ -391,7 +451,7 @@ in {
         }
 
         # https://wiki.hyprland.org/Configuring/Variables/#misc
-        misc { 
+        misc {
             force_default_wallpaper = -1 # Set to 0 or 1 to disable the anime mascot wallpapers
             disable_hyprland_logo = false # If true disables the random hyprland logo / anime girl background. :(
             disable_splash_rendering = true
@@ -405,10 +465,12 @@ in {
 
         # https://wiki.hyprland.org/Configuring/Variables/#input
         input {
-            kb_layout = us
-            kb_variant =
+            kb_layout = ${
+              lib.concatStringsSep "," config.nixtra.desktop.languages
+            }
+            kb_variant = ,
             kb_model =
-            kb_options =
+            kb_options = grp:alt_shift_toggle
             kb_rules =
 
             follow_mouse = 1
@@ -423,9 +485,7 @@ in {
         }
 
         # https://wiki.hyprland.org/Configuring/Variables/#gestures
-        gestures {
-            workspace_swipe = false
-        }
+        gesture = 3, horizontal, workspace
 
         # Example per-device config
         # See https://wiki.hyprland.org/Configuring/Keywords/#per-device-input-configs for more
@@ -479,39 +539,39 @@ in {
         bind = $mainMod, K, movefocus, u
         bind = $mainMod, J, movefocus, d
 
-        # Switch workspaces with mainMod + [0-9]
-        bind = $mainMod, 1, workspace, 1
-        bind = $mainMod, 2, workspace, 2
-        bind = $mainMod, 3, workspace, 3
-        bind = $mainMod, 4, workspace, 4
-        bind = $mainMod, 5, workspace, 5
-        bind = $mainMod, 6, workspace, 6
-        bind = $mainMod, 7, workspace, 7
-        bind = $mainMod, 8, workspace, 8
-        bind = $mainMod, 9, workspace, 9
-        bind = $mainMod, 0, workspace, 10
-        bind = $mainMod CONTROL_L, 1, workspace, 11
-        bind = $mainMod CONTROL_L, 2, workspace, 12
-        bind = $mainMod CONTROL_L, 3, workspace, 13
-        bind = $mainMod CONTROL_L, 4, workspace, 14
-        bind = $mainMod CONTROL_L, 5, workspace, 15
-        bind = $mainMod CONTROL_L, 6, workspace, 16
-        bind = $mainMod CONTROL_L, 7, workspace, 17
-        bind = $mainMod CONTROL_L, 8, workspace, 18
-        bind = $mainMod CONTROL_L, 9, workspace, 19
-        bind = $mainMod CONTROL_L, 0, workspace, 20
+        # # Switch workspaces with mainMod + [0-9]
+        # bind = $mainMod, 1, workspace, 1
+        # bind = $mainMod, 2, workspace, 2
+        # bind = $mainMod, 3, workspace, 3
+        # bind = $mainMod, 4, workspace, 4
+        # bind = $mainMod, 5, workspace, 5
+        # bind = $mainMod, 6, workspace, 6
+        # bind = $mainMod, 7, workspace, 7
+        # bind = $mainMod, 8, workspace, 8
+        # bind = $mainMod, 9, workspace, 9
+        # bind = $mainMod, 0, workspace, 10
+        # bind = $mainMod CONTROL_L, 1, workspace, 11
+        # bind = $mainMod CONTROL_L, 2, workspace, 12
+        # bind = $mainMod CONTROL_L, 3, workspace, 13
+        # bind = $mainMod CONTROL_L, 4, workspace, 14
+        # bind = $mainMod CONTROL_L, 5, workspace, 15
+        # bind = $mainMod CONTROL_L, 6, workspace, 16
+        # bind = $mainMod CONTROL_L, 7, workspace, 17
+        # bind = $mainMod CONTROL_L, 8, workspace, 18
+        # bind = $mainMod CONTROL_L, 9, workspace, 19
+        # bind = $mainMod CONTROL_L, 0, workspace, 20
 
-        # Move active window to a workspace with mainMod + SHIFT + [0-9]
-        bind = $mainMod SHIFT, 1, movetoworkspace, 1
-        bind = $mainMod SHIFT, 2, movetoworkspace, 2
-        bind = $mainMod SHIFT, 3, movetoworkspace, 3
-        bind = $mainMod SHIFT, 4, movetoworkspace, 4
-        bind = $mainMod SHIFT, 5, movetoworkspace, 5
-        bind = $mainMod SHIFT, 6, movetoworkspace, 6
-        bind = $mainMod SHIFT, 7, movetoworkspace, 7
-        bind = $mainMod SHIFT, 8, movetoworkspace, 8
-        bind = $mainMod SHIFT, 9, movetoworkspace, 9
-        bind = $mainMod SHIFT, 0, movetoworkspace, 10
+        # # Move active window to a workspace with mainMod + SHIFT + [0-9]
+        # bind = $mainMod SHIFT, 1, movetoworkspace, 1
+        # bind = $mainMod SHIFT, 2, movetoworkspace, 2
+        # bind = $mainMod SHIFT, 3, movetoworkspace, 3
+        # bind = $mainMod SHIFT, 4, movetoworkspace, 4
+        # bind = $mainMod SHIFT, 5, movetoworkspace, 5
+        # bind = $mainMod SHIFT, 6, movetoworkspace, 6
+        # bind = $mainMod SHIFT, 7, movetoworkspace, 7
+        # bind = $mainMod SHIFT, 8, movetoworkspace, 8
+        # bind = $mainMod SHIFT, 9, movetoworkspace, 9
+        # bind = $mainMod SHIFT, 0, movetoworkspace, 10
 
         # Example special workspace (scratchpad)
         #bind = $mainMod, S, togglespecialworkspace, magic
@@ -565,6 +625,9 @@ in {
         # Close windows
         bind = $mainMod,Z,killactive
 
+        # Open screen annotator
+        bind = $mainMod, KP_Left, exec, pkill -SIGUSR1 wayscriber
+
         ##############################
         ### WINDOWS AND WORKSPACES ###
         ##############################
@@ -603,15 +666,22 @@ in {
 
         # Gromit for Wayland
         # https://www.reddit.com/r/hyprland/comments/18kutkk/gromitmpx_configuration
-        workspace = special:gromit, gapsin:0, gapsout:0, shadow:false, on-created-empty: gromit-mpx -a
-        windowrule = noblur, class:^(Gromit-mpx)$
-        windowrule = opacity 1 override, 1 override, class:^(Gromit-mpx)$
-        windowrule = noshadow, class:^(Gromit-mpx)$
-        windowrule = suppressevent fullscreen, class:^(Gromit-mpx)$
-        windowrule = size 100% 100%, class:^(Gromit-mpx)$
-        bind = $mainMod, KP_Left, togglespecialworkspace, gromit
-        bind = $mainMod, KP_Begin, exec, gromit-mpx --clear
-        bind = Control_L, Z, exec, desktop-run-if-active "special:gromit" "gromit-mpx --undo"
+        #
+        # Gromit-mpx is no longer used because of an issue on Wayland where it hijacks
+        # the mouse input of other applications, preventing you from clicking things on them:
+        # https://github.com/bk138/gromit-mpx/issues/136
+        #
+        # Wayscriber is used instead, a modern alternative for Wayland compositors.
+        #
+        # workspace = special:gromit, gapsin:0, gapsout:0, shadow:false, on-created-empty: gromit-mpx -a
+        # windowrule = noblur, class:^(Gromit-mpx)$
+        # windowrule = opacity override 1, class:^(Gromit-mpx)$
+        # windowrule = noshadow, class:^(Gromit-mpx)$
+        # windowrule = suppressevent fullscreen, class:^(Gromit-mpx)$
+        # windowrule = size 100% 100%, class:^(Gromit-mpx)$
+        # bind = $mainMod, KP_Left, togglespecialworkspace, gromit
+        # bind = $mainMod, KP_Begin, exec, gromit-mpx --clear
+        # bind = Control_L, Z, exec, desktop-run-if-active "special:gromit" "gromit-mpx --undo"
 
         # -------
 

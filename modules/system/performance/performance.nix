@@ -9,5 +9,8 @@
     ./nic.nix
     ./ksm.nix
     ./hugepages.nix
+    ./monit.nix
+    ./smartd.nix
+    ./watchdog.nix
   ];
 }

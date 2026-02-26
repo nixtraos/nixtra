@@ -8,10 +8,8 @@ createCommand {
   requireRoot = true;
 
   command = ''
-    if [ -n "$SUDO_USER" ]; then
-      HOME="/home/$SUDO_USER"
-      export HOME
-    fi
+    USERNAME=$(logname)
+    HOME=$(getent passwd ''${USERNAME} | cut -d: -f6)
 
     CONFIG_DIR="''${XDG_CONFIG_HOME:-$HOME/.config}/sandman"
     LOCKFILE="$CONFIG_DIR.lock"

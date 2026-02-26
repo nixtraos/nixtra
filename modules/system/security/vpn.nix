@@ -14,10 +14,16 @@ in {
     })
     (lib.mkIf (cfg.enable && cfg.type == "mullvad") {
 
-      environment.systemPackages = with pkgs; [ mullvad-autostart cowsay ];
+      environment.systemPackages = with pkgs;
+        [
+          #mullvad-autostart
+          cowsay
+        ];
 
-      services.mullvad-vpn.enable = true;
-      services.mullvad-vpn.package = pkgs.mullvad-vpn;
+      services.mullvad-vpn = {
+        enable = true;
+        package = pkgs.mullvad-vpn;
+      };
 
       # https://discourse.nixos.org/t/connected-to-mullvadvpn-but-no-internet-connection/35803/12
       #networking.networkmanager = {
@@ -32,6 +38,12 @@ in {
         fallbackDns = [ ]; # Prevent DNS leaks
         dnsovertls = "true";
       };
+
+      system.activationScripts.configureMullvad = ''
+        ${pkgs.mullvad}/bin/mullvad lan set allow
+        ${pkgs.mullvad}/bin/mullvad lockdown-mode set on
+        ${pkgs.mullvad}/bin/mullvad dns set default --block-ads --block-trackers --block-malware --block-adult-content --block-gambling
+      '';
     })
     (lib.mkIf (cfg.enable && cfg.type == "wireguard") {
       environment.systemPackages = with pkgs; [ wireguard-tools ];

@@ -10,5 +10,6 @@
     ./services/udev.nix
     ./services/polkit.nix
     ./services/udisks2.nix
+    ./services/searxng.nix
   ];
 }

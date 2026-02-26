@@ -2,7 +2,7 @@
 
 {
   config = lib.mkIf config.nixtra.ssh.enable {
-    programs.ssh = {
+    programs.ssh = lib.mkDefault {
       startAgent = true;
       knownHosts = lib.mkMerge (builtins.mapAttrs (name: value: {
         ${name} = {

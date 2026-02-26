@@ -15,5 +15,8 @@
 
     # Virtualization
     ./virt.nix
+
+    ./nginx.nix
+    ./miniflux.nix
   ];
 }

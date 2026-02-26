@@ -25,6 +25,10 @@ A list of things that need to be done for Nixtra. When an entry is completed, it
 - Add GUI widgets for the control functions with AGS or some other toolkit
 - Implement Numpad compatibility
 - Implement pywal
+- Add two focus modes in Hyprland
+  - External focus mode: select a set of workspaces to remain visible and hide the other ones; push them to an invisible special workspace / scratchpad
+  - Internal focus mode: select a program in the current workspace to focus on; hide all the other programs in the workspace; push them to an invisible special workspace / scratchpad
+  - Restore the programs to their original workspaces when disabling either one
 
 **Core**
 

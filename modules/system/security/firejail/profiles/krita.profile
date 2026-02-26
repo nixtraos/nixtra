@@ -9,3 +9,4 @@ mkdir ${HOME}/.local/share/krita
 whitelist ${HOME}/.local/share/krita
 whitelist ${HOME}/.config/kritarc
 whitelist ${HOME}/.config/kritadisplayrc
+whitelist ${HOME}/.local/share/fonts

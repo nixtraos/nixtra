@@ -88,6 +88,10 @@ createCommand {
         fi
       done
 
+      log "Refreshing the system's font cache..."
+      fc-cache -f -v
+      log "Refreshed the system's font cache."
+
       log "Removing unused development environments..."
       find /tmp -maxdepth 1 -type d -name "nix-shell-*" -exec rm -rf {} +
       find /tmp -maxdepth 1 -type d -name "nix-develop-*" -exec rm -rf {} +

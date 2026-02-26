@@ -18,8 +18,9 @@
 
     ./commands/commands.nix
 
-    ../../../pkgs/notif/mako.nix
-    ../../../pkgs/wayland/waypaper.nix
+    ../../../pkgs/notif/mako.nix # Notification daemon
+    ../../../pkgs/wayland/waypaper.nix # Wallpaper picker
+    ../../../pkgs/drawing/wayscriber.nix # Screen annotator tool
   ];
 
   config.nixtra = {

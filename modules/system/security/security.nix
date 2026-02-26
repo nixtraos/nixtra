@@ -20,6 +20,8 @@
     ./dbus.nix
     ./audit.nix
     ./close-on-suspend.nix
+    ./suid.nix
+    ./fhs.nix
 
     # Applications
     ./doas.nix

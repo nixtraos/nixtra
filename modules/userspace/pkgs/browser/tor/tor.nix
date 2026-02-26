@@ -1,7 +1,7 @@
 { nixtraLib, config, pkgs, ... }:
 
 let
-  tor-browser-clearnet = pkgs.tor-browser-bundle-bin.override {
+  tor-browser-clearnet = pkgs.tor-browser.override {
     extraPrefs = ''
       lockPref("extensions.torlauncher.prompt_at_startup", false)
       lockPref("extensions.torlauncher.start_tor", false)
@@ -12,7 +12,7 @@ let
     '';
   };
 
-  tor-browser-proxy = pkgs.tor-browser-bundle-bin.override {
+  tor-browser-proxy = pkgs.tor-browser.override {
     # network.trr.mode set to 0 to be able to access .onion hidden services
     extraPrefs = ''
       lockPref("extensions.torlauncher.prompt_at_startup", false)
@@ -26,7 +26,7 @@ let
     '';
   };
 
-  #tor-browser = pkgs.tor-browser-bundle-bin.override { extraPrefs = ""; };
+  #tor-browser = pkgs.tor-browser.override { extraPrefs = ""; };
 
   # Create wrapper scripts
   tor-browser-clearnet-wrapper =

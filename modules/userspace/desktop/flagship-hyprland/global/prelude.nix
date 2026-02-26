@@ -13,6 +13,6 @@
   ];
 
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
-    nixtra = { user = { shell = lib.mkDefault "zsh"; }; };
+    nixtra = { user = { shell.backend = lib.mkDefault "zsh"; }; };
   };
 }

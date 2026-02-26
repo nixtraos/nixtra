@@ -113,10 +113,10 @@ The `config` argument is *not* the same as the `config` attribute:
 | `default.nix` (root)           | Main entry point for imports and overlays                |
 | `CONTRIBUTING.md`, `ci/`, etc. | Guidelines, CI tooling, and test infrastructure          |
 
-[1]: https://releases.nixos.org/nixpkgs/nixpkgs-17.03pre91233.8d8f57d/manual/index.html?utm_source=chatgpt.com "Nixpkgs Contributors Guide"
-[2]: https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/README.md?utm_source=chatgpt.com "nixpkgs/pkgs/by-name/README.md at master · NixOS/nixpkgs · GitHub"
-[3]: https://nixos.org/manual/nixpkgs/stable/index.html?utm_source=chatgpt.com "Nixpkgs Reference Manual"
-[4]: https://nixos.org/manual/nixpkgs?utm_source=chatgpt.com "Nixpkgs Reference Manual"
+[1]: https://releases.nixos.org/nixpkgs/nixpkgs-17.03pre91233.8d8f57d/manual/index.html "Nixpkgs Contributors Guide"
+[2]: https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/README.md "nixpkgs/pkgs/by-name/README.md at master · NixOS/nixpkgs · GitHub"
+[3]: https://nixos.org/manual/nixpkgs/stable/index.html "Nixpkgs Reference Manual"
+[4]: https://nixos.org/manual/nixpkgs "Nixpkgs Reference Manual"
 
 ## `pkgs` Functions
 

@@ -1,6 +1,6 @@
 ignore blacklist /usr/share/
 
-include ${HOME}/.config/firejail/ssh.profile
+include /etc/firejail/ssh.profile
 
 whitelist ${HOME}/.config/git
 whitelist ${HOME}/.config/gnupg

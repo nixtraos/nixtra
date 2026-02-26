@@ -801,11 +801,6 @@ in {
           box-shadow: inset 0 -3px #ffffff;
       }
 
-      /* you can set a style on hover for any module like this */
-      #pulseaudio:hover {
-          background-color: #a37800;
-      }
-
       #workspaces {
           padding: 15px;
       }
