@@ -3,7 +3,10 @@
 {
   imports = [ ];
 
-  environment.systemPackages = with pkgs; [ gnupg pinentry-curses ];
+  environment.systemPackages = with pkgs; [
+    gnupg
+    pinentry-curses
+  ];
 
   services.pcscd.enable = true;
 

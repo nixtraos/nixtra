@@ -1,4 +1,9 @@
-{ config, pkgs, nixtraLib, ... }:
+{
+  config,
+  pkgs,
+  nixtraLib,
+  ...
+}:
 
 let
   # Remove the RecentFiles history on startup
@@ -23,7 +28,8 @@ let
     ${pkgs.krita}/bin/krita "$@"
     clear_recent_files
   '';
-in {
+in
+{
   #programs.krita.enable = true;
 
   home.packages = with pkgs; [

@@ -14,9 +14,17 @@ let
     #ProtectProc="invisible"
     #RestrictFileSystems=
     #ProtectKernelLogs="yes"
-    RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+    RestrictAddressFamilies = [
+      "AF_UNIX"
+      "AF_INET"
+      "AF_INET6"
+    ];
     LockPersonality = true;
-    SystemCallFilter = [ "@system-service" "~@privileged" "~@resources" ];
+    SystemCallFilter = [
+      "@system-service"
+      "~@privileged"
+      "~@resources"
+    ];
     SystemCallArchitectures = "native";
     MemoryDenyWriteExecute = true;
     CapabilityBoundingSet = ""; # Default to empty for base
@@ -26,10 +34,12 @@ let
   # Service-specific overrides
   serviceOverrides = {
     NetworkManager = {
-      CapabilityBoundingSet =
-        [ "CAP_NET_ADMIN" "CAP_NET_RAW" "CAP_NET_BIND_SERVICE" ];
-      RestrictAddressFamilies = baseHardening.RestrictAddressFamilies
-        ++ [ "AF_NETLINK" ];
+      CapabilityBoundingSet = [
+        "CAP_NET_ADMIN"
+        "CAP_NET_RAW"
+        "CAP_NET_BIND_SERVICE"
+      ];
+      RestrictAddressFamilies = baseHardening.RestrictAddressFamilies ++ [ "AF_NETLINK" ];
     };
 
     docker = {
@@ -51,19 +61,35 @@ let
       ];
       # Note: DeviceAllow and DevicePolicy are often tricky with existing services.
       # Ensure these are truly needed or consider more specific udev rules.
-      DeviceAllow = [ "/dev/null rw" "/dev/urandom r" "char-pts rw" ];
+      DeviceAllow = [
+        "/dev/null rw"
+        "/dev/urandom r"
+        "char-pts rw"
+      ];
       DevicePolicy = "closed";
     };
 
     libvirtd = {
-      CapabilityBoundingSet =
-        [ "CAP_SYS_PTRACE" "CAP_NET_ADMIN" "CAP_IPC_LOCK" ];
-      DeviceAllow = [ "/dev/kvm rw" "/dev/vhost-net rw" ];
+      CapabilityBoundingSet = [
+        "CAP_SYS_PTRACE"
+        "CAP_NET_ADMIN"
+        "CAP_IPC_LOCK"
+      ];
+      DeviceAllow = [
+        "/dev/kvm rw"
+        "/dev/vhost-net rw"
+      ];
     };
 
     virtqemud = {
-      CapabilityBoundingSet = [ "CAP_SYS_PTRACE" "CAP_NET_ADMIN" ];
-      DeviceAllow = [ "/dev/kvm rw" "/dev/vhost-vsock rw" ];
+      CapabilityBoundingSet = [
+        "CAP_SYS_PTRACE"
+        "CAP_NET_ADMIN"
+      ];
+      DeviceAllow = [
+        "/dev/kvm rw"
+        "/dev/vhost-vsock rw"
+      ];
     };
 
     pcscd = {
@@ -80,29 +106,42 @@ let
     "user@.service" = {
       ProtectSystem = "full";
       ProtectHome = "read-only";
-      CapabilityBoundingSet = [ "CAP_SETUID" "CAP_SETGID" "CAP_SYS_PTRACE" ];
+      CapabilityBoundingSet = [
+        "CAP_SETUID"
+        "CAP_SETGID"
+        "CAP_SYS_PTRACE"
+      ];
     };
 
     nix-daemon = {
-      CapabilityBoundingSet = [ "CAP_DAC_OVERRIDE" "CAP_FOWNER" ];
+      CapabilityBoundingSet = [
+        "CAP_DAC_OVERRIDE"
+        "CAP_FOWNER"
+      ];
       # Merge SystemCallFilter:
       SystemCallFilter = baseHardening.SystemCallFilter ++ [ "@chown" ];
     };
 
     rtkit-daemon = {
-      CapabilityBoundingSet = [ "CAP_SYS_NICE" "CAP_SYS_RESOURCE" ];
-      RestrictAddressFamilies = baseHardening.RestrictAddressFamilies
-        ++ [ "AF_NETLINK" ];
+      CapabilityBoundingSet = [
+        "CAP_SYS_NICE"
+        "CAP_SYS_RESOURCE"
+      ];
+      RestrictAddressFamilies = baseHardening.RestrictAddressFamilies ++ [ "AF_NETLINK" ];
     };
 
     getty = {
-      CapabilityBoundingSet = [ "CAP_SYS_ADMIN" "CAP_SYS_TTY_CONFIG" ];
+      CapabilityBoundingSet = [
+        "CAP_SYS_ADMIN"
+        "CAP_SYS_TTY_CONFIG"
+      ];
       DeviceAllow = [ "/dev/tty rw" ];
     };
   };
-in {
+in
+{
   # Iterate over serviceOverrides and apply them as overrides to existing services
-  systemd.services = lib.mapAttrs
-    (name: overrides: { serviceConfig = baseHardening // overrides; })
-    serviceOverrides;
+  systemd.services = lib.mapAttrs (name: overrides: {
+    serviceConfig = baseHardening // overrides;
+  }) serviceOverrides;
 }

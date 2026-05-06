@@ -1,5 +1,8 @@
 { ... }:
 
 {
-  imports = [ ./btrfs.nix ./block.nix ];
+  imports = [
+    ./btrfs.nix
+    ./block.nix
+  ];
 }

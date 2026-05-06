@@ -1,10 +1,17 @@
-{ nixtraLib, config, pkgs, lib, ... }:
+{
+  nixtraLib,
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   imports = [
     ./programs/shell/zsh.nix
     ./programs/theme/qt.nix
     ./programs/theme/gtk.nix
+    ./programs/editor/neovim/default.nix
 
     ./services/polkit.nix
     ./services/portal.nix
@@ -13,6 +20,10 @@
   ];
 
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
-    nixtra = { user = { shell.backend = lib.mkDefault "zsh"; }; };
+    nixtra = {
+      user = {
+        shell = lib.mkDefault "zsh";
+      };
+    };
   };
 }

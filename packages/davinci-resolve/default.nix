@@ -173,19 +173,23 @@ let
         ln -s $out/libs/libcrypto.so.1.1 $out/libs/libcrypt.so.1
       '';
 
-      postInstall = if studioVariant then ''
-        echo "Applying binary patch to resolve..."
-        # Make sure the binary exists and is writable for perl -pi
-        if [ -f $out/bin/resolve ]; then
-          chmod +w $out/bin/resolve
-          perl -pi -e 's/\x0f\x84\x9d\x00\x00\x00\x89\xf5/\x0f\x85\x9d\x00\x00\x00\x89\xf5/g' $out/bin/resolve
-          chmod -w $out/bin/resolve # Revert permissions
-          echo "Binary patch applied successfully."
+      postInstall =
+        if studioVariant then
+          ''
+            echo "Applying binary patch to resolve..."
+            # Make sure the binary exists and is writable for perl -pi
+            if [ -f $out/bin/resolve ]; then
+              chmod +w $out/bin/resolve
+              perl -pi -e 's/\x0f\x84\x9d\x00\x00\x00\x89\xf5/\x0f\x85\x9d\x00\x00\x00\x89\xf5/g' $out/bin/resolve
+              chmod -w $out/bin/resolve # Revert permissions
+              echo "Binary patch applied successfully."
+            else
+              echo "Error: /bin/resolve not found in $out. Patch skipped." >&2
+              exit 1
+            fi
+          ''
         else
-          echo "Error: /bin/resolve not found in $out. Patch skipped." >&2
-          exit 1
-        fi
-      '' else "";
+          "";
 
       desktopItems = [
         (makeDesktopItem {

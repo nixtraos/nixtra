@@ -122,21 +122,22 @@
         "net.ipv4.tcp_congestion_control" = "bbr";
         "net.core.default_qdisc" = "cake";
 
-        "vm.mmap_min_addr" =
-          "65536"; # protect low memory (NULL-deref mitigation)
+        "vm.mmap_min_addr" = "65536"; # protect low memory (NULL-deref mitigation)
         "audit" = "1"; # enable audit subsystem early
 
         # use swap only if absolutely necessary
-        "vm.swappiness" = "1";
+        # higher value is safer
+        #"vm.swappiness" = "1";
+        "vm.swappiness" = "60";
         "kernel.sched_child_runs_first" = 1;
 
         # accomodation for hardened memory allocator
         "vm.max_map_count" = "1048576";
       }
       (lib.mkIf config.nixtra.security.kernel.aggressivePanic {
-        "kernel.panic_on_oops" =
-          "1"; # panic if kernel oops occurs (avoid running a corrupted kernel)
+        "kernel.panic_on_oops" = "1"; # panic if kernel oops occurs (avoid running a corrupted kernel)
       })
+      # NOTE: this and aggressivePanic may cause minor driver hiccups, check if it is the freezing culprit
       (lib.mkIf config.nixtra.security.kernel.veryAggressivePanic {
         "kernel.panic_on_warn" = "1"; # panic on WARN path (optional)
       })

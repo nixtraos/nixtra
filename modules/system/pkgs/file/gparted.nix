@@ -1,5 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  environment.systemPackages = with pkgs; [ exfatprogs gparted ];
+  environment.systemPackages = with pkgs; [
+    exfatprogs
+    gparted
+  ];
 }

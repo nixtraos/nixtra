@@ -12,7 +12,13 @@
 #   of Sep. 6th 2025.                                    #
 ##########################################################
 
-{ config, lib, pkgs, settings, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  settings,
+  ...
+}:
 
 let
   # Shorthand for the main configuration set
@@ -20,7 +26,8 @@ let
 
   # Duplicated because overlays do not affect
   # the module option namespace.
-  mkNixtraOption = type: default: description:
+  mkNixtraOption =
+    type: default: description:
     lib.mkOption { inherit type default description; };
 
   # Helper to define simple, common options
@@ -50,13 +57,11 @@ let
       };
       owner = lib.mkOption {
         type = lib.types.str;
-        description =
-          lib.mdDoc "The repository owner (e.g., 'quarterstar', '*').";
+        description = lib.mdDoc "The repository owner (e.g., 'quarterstar', '*').";
       };
       repository = lib.mkOption {
         type = lib.types.str;
-        description =
-          lib.mdDoc "The repository name (e.g., 'opsec-index', '*').";
+        description = lib.mdDoc "The repository name (e.g., 'opsec-index', '*').";
       };
     };
   };
@@ -122,26 +127,29 @@ let
         description = lib.mdDoc "The port the proxy service will listen on.";
       };
       entries = lib.mkOption {
-        type = lib.types.listOf (lib.types.submodule {
-          options = {
-            type = lib.mkOption {
-              type = lib.types.enum [ "socks5" "http" ];
-              description =
-                lib.mdDoc "The type of upstream proxy (socks5 or http).";
+        type = lib.types.listOf (
+          lib.types.submodule {
+            options = {
+              type = lib.mkOption {
+                type = lib.types.enum [
+                  "socks5"
+                  "http"
+                ];
+                description = lib.mdDoc "The type of upstream proxy (socks5 or http).";
+              };
+              address = lib.mkOption {
+                type = lib.types.str;
+                description = lib.mdDoc "The address of the upstream proxy.";
+              };
+              port = lib.mkOption {
+                type = lib.types.port;
+                description = lib.mdDoc "The port of the upstream proxy.";
+              };
             };
-            address = lib.mkOption {
-              type = lib.types.str;
-              description = lib.mdDoc "The address of the upstream proxy.";
-            };
-            port = lib.mkOption {
-              type = lib.types.port;
-              description = lib.mdDoc "The port of the upstream proxy.";
-            };
-          };
-        });
+          }
+        );
         default = [ ];
-        description =
-          lib.mdDoc "List of upstream proxies for microsocks to use.";
+        description = lib.mdDoc "List of upstream proxies for microsocks to use.";
       };
     };
   };
@@ -151,19 +159,16 @@ let
     options = {
       name = lib.mkOption {
         type = lib.types.str;
-        description =
-          lib.mdDoc "The name of the Flatpak repository (e.g., 'flathub').";
+        description = lib.mdDoc "The name of the Flatpak repository (e.g., 'flathub').";
       };
       source = lib.mkOption {
         type = lib.types.str;
-        description = lib.mdDoc
-          "The URL or path to the Flatpak repository file (.flatpakrepo).";
+        description = lib.mdDoc "The URL or path to the Flatpak repository file (.flatpakrepo).";
       };
       allowForUser = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description =
-          lib.mdDoc "Whether this source is allowed for user installations.";
+        description = lib.mdDoc "Whether this source is allowed for user installations.";
       };
     };
   };
@@ -173,8 +178,7 @@ let
     options = {
       app = lib.mkOption {
         type = lib.types.str;
-        description = lib.mdDoc
-          "The Flatpak application ID (e.g., 'com.cakewallet.CakeWallet').";
+        description = lib.mdDoc "The Flatpak application ID (e.g., 'com.cakewallet.CakeWallet').";
       };
       url = lib.mkOption {
         type = lib.types.nullOr lib.types.str; # Can be null if source is used
@@ -217,13 +221,11 @@ let
       };
       time = lib.mkOption {
         type = lib.types.str; # cron format or systemd.time(7) format
-        description = lib.mdDoc
-          "The time or schedule for the task (e.g., '23:00', 'hourly').";
+        description = lib.mdDoc "The time or schedule for the task (e.g., '23:00', 'hourly').";
       };
       action = lib.mkOption {
         type = lib.types.str;
-        description =
-          lib.mdDoc "The command or script to execute for the task.";
+        description = lib.mdDoc "The command or script to execute for the task.";
       };
     };
   };
@@ -238,8 +240,7 @@ let
       envVars = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
         default = { };
-        description =
-          lib.mdDoc "Environment variables specific to this program.";
+        description = lib.mdDoc "Environment variables specific to this program.";
       };
     };
   };
@@ -273,56 +274,86 @@ let
     };
   };
 
-  sshHostType = lib.types.submodule ({ name, ... }: {
+  sshHostType = lib.types.submodule (
+    { name, ... }:
+    {
+      options = {
+        hostNames = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          description = "A list of hostnames for this SSH host. Can be an IP address or a host name";
+        };
+
+        publicKeySecret = lib.mkOption {
+          type = lib.types.str;
+          description = ''
+            The path to the secret containing the public key for this host.
+            This would typically be a path within a secrets management system.
+          '';
+        };
+
+        user =
+          mkNixtraOption lib.types.str "user"
+            "The default user that programs using SSH should connect to.";
+        profile =
+          mkNixtraOption lib.types.str ""
+            "The name of the Nixtra profile that should be associated with this SSH host, if it is using Nixtra. An empty string means that it is not a Nixtra host";
+      };
+    }
+  );
+
+  automaticCleanupServicesType = lib.types.submodule {
     options = {
-      hostNames = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        description =
-          "A list of hostnames for this SSH host. Can be an IP address or a host name";
-      };
-
-      publicKeySecret = lib.mkOption {
+      name = lib.mkOption {
         type = lib.types.str;
-        description = ''
-          The path to the secret containing the public key for this host.
-          This would typically be a path within a secrets management system.
-        '';
+        description = "The name of the system service.";
       };
 
-      user = mkNixtraOption lib.types.str "user"
-        "The default user that programs using SSH should connect to.";
-      profile = mkNixtraOption lib.types.str ""
-        "The name of the Nixtra profile that should be associated with this SSH host, if it is using Nixtra. An empty string means that it is not a Nixtra host";
+      maximumMemory =
+        mkNixtraOption lib.types.int 512
+          "Maximum RAM memory that can be used by the service.";
+
+      maximumSwapMemory =
+        mkNixtraOption lib.types.int 2048
+          "Maximum SWAP memory that can be used by the service.";
+
+      restartAfter =
+        mkNixtraOption lib.types.int 60
+          "Number of minutes that need to pass before service is restarted.";
     };
-  });
-in {
+  };
+in
+{
   options.nixtra = {
     user = {
-      username =
-        mkNixtraOption lib.types.str "user" "Username of the main user.";
+      username = mkNixtraOption lib.types.str "user" "Username of the main user.";
       uid = mkNixtraOption lib.types.int 1001 "User ID for the main user.";
 
       declarativeUsers = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable declarative user management.";
-        passwordSecret = mkNixtraOption lib.types.str "password"
-          "SOPS secret name for the user's password.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable declarative user management.";
+        passwordSecret =
+          mkNixtraOption lib.types.str "password"
+            "SOPS secret name for the user's password.";
       };
 
-      desktop = mkNixtraOption (lib.types.enum [ "flagship-hyprland" "empty" ])
-        "flagship-hyprland" (lib.mdDoc ''
-          Available options: `flagship-hyprland`, `empty`.
-          Use `empty` if you want to cherry-pick individual desktop configs in home.nix.
-        '');
+      desktop =
+        mkNixtraOption
+          (lib.types.enum [
+            "flagship-hyprland"
+            "empty"
+          ])
+          "flagship-hyprland"
+          (
+            lib.mdDoc ''
+              Available options: `flagship-hyprland`, `empty`.
+              Use `empty` if you want to cherry-pick individual desktop configs in home.nix.
+            ''
+          );
 
-      shell = {
-        backend = mkNixtraOption (lib.types.enum [ "zsh" "fish" "bash" ]) "zsh"
-          (lib.mdDoc "Available options: `zsh` (recommended), `fish`, `bash`.");
-
-        environmentVariables =
-          mkNixtraOption (lib.types.attrsOf lib.types.str) { }
-          "Environment variables to set at the end with the shell. This may be needed for some environment variables like `SSH_ASKPASS`.";
-      };
+      shell = mkNixtraOption (lib.types.enum [
+        "zsh"
+        "fish"
+        "bash"
+      ]) "zsh" (lib.mdDoc "Available options: `zsh` (recommended), `fish`, `bash`.");
 
       browser = lib.mkOption {
         type = lib.types.str;
@@ -330,22 +361,26 @@ in {
         description = "The preferred browser for applications to use.";
       };
 
-      terminal = mkNixtraOption lib.types.str "kitty"
-        "The preferred terminal for applications to use.";
+      terminal = mkNixtraOption lib.types.str "kitty" "The preferred terminal for applications to use.";
 
-      editor = mkNixtraOption lib.types.str "nvim"
-        "The preferred editor for applications to use.";
+      editor = mkNixtraOption lib.types.str "nvim" "The preferred editor for applications to use.";
 
       groups = mkNixtraOption (lib.types.listOf lib.types.str) [
         "wheel" # sudo/doas
         "docker" # For using docker on userspace
         "libvirtd" # For managing VMs on userspace
+        "podman"
+        "proc"
         "video"
         "render" # For access to GPU functions by user; required for OpenCL by some installation
       ] "List of groups the user should be a member of.";
     };
 
     nix = {
+      useBinaryCaches =
+        mkNixtraOption lib.types.bool true
+          "Whether binary caches should be used. Disabled by default in order to mitigate certain supply chain risks.";
+
       caches = mkNixtraOption (lib.types.listOf lib.types.str) [
         "https://cache.nixos.org/"
         "https://nix-community.cachix.org/"
@@ -369,8 +404,7 @@ in {
     };
 
     hardware = {
-      laptop =
-        mkNixtraOption lib.types.bool false "Whether the PC is a laptop.";
+      laptop = mkNixtraOption lib.types.bool false "Whether the PC is a laptop.";
 
       cpu = lib.mkOption {
         type = lib.types.str;
@@ -389,9 +423,17 @@ in {
       };
     };
 
+    monitor = {
+      hdr =
+        mkNixtraOption lib.types.bool false
+          "Whether to attempt to enable High Dynamic Range for monitors in use.";
+      oled =
+        mkNixtraOption lib.types.bool false
+          "Whether to apply optimizations to reduce burn-in risk for OLED screens. Typically, Nixtra environments fix this by having transparent or animated background elements, and a composition of the two. Turning this option will cause it to take precedence over customization options, should conflicts be present.";
+    };
+
     disk = {
-      ssd = mkNixtraOption lib.types.bool true
-        "Whether the disk being used is an SSD.";
+      ssd = mkNixtraOption lib.types.bool false "Whether the disk being used is an SSD.";
 
       partitions = {
         boot = lib.mkOption {
@@ -407,8 +449,7 @@ in {
       };
 
       encryption = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to use Full Disk Encryption.";
+        enable = mkNixtraOption lib.types.bool true "Whether to use Full Disk Encryption.";
         decryptedRootDevice = lib.mkOption {
           type = lib.types.str;
           description = "The path to the decrypted root device.";
@@ -419,57 +460,82 @@ in {
 
     memory = {
       swap = {
-        enable =
-          mkNixtraOption lib.types.bool true "Whether to use swap memory.";
-        zswap = mkNixtraOption lib.types.bool true
-          "Whether to compress swap with zswap.";
-        size = mkNixtraOption lib.types.int (8 * 1024)
-          "The size of the swap partition.";
+        enable = mkNixtraOption lib.types.bool true "Whether to use swap memory.";
+        zswap = mkNixtraOption lib.types.bool true "Whether to compress swap with zswap.";
+        size = mkNixtraOption lib.types.int (32 * 1024) "The size of the swap partition.";
       };
 
       zram = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to compress memory with zram.";
+        enable = mkNixtraOption lib.types.bool true "Whether to compress memory with zram.";
       };
+
+      autoCleanVmCache =
+        mkNixtraOption lib.types.bool true
+          "Whether to automatically clean the VM cache with level 3 write.";
+
+      automaticCleanupServices =
+        mkNixtraOption (lib.types.listOf automaticCleanupServicesType)
+          [
+            { name = "automatic-timezoned-geoclue-agent.service"; }
+            { name = "automatic-timezoned.service"; }
+            { name = "clamav-daemon.service"; }
+            { name = "geoclue.service"; }
+            { name = "miniflux.service"; }
+            { name = "mysql.service"; }
+            { name = "nginx.service"; }
+            { name = "ollama.service"; }
+            { name = "opensnitchd.service"; }
+            { name = "postgresql.service"; }
+            { name = "redis-searx.service"; }
+            { name = "tor-cakewallet.service"; }
+            { name = "tor-git-tor.service"; }
+            { name = "tor-yellow.service"; }
+            { name = "tor.service"; }
+            { name = "udisks2.service"; }
+            { name = "uwsgi.service"; }
+          ]
+          "Services that should be restarted periodically to avoid OOM and memory leakage issues on monolithic machines.";
     };
 
     system = {
-      kernel =
-        mkNixtraOption (lib.types.enum [ "standard" "security" "gaming" ])
-        "security" (lib.mdDoc
-          "The Linux kernel variant to use. Choose `standard` for the normal kernel, `security` for enhanced hardening measures, and `gaming` for performance optimizations.");
-
       timezone = {
-        auto = mkNixtraOption lib.types.bool true
-          "Whether to set the timezone by default. If set to true, `config.nixtra.timezone.default` will be ignored.";
-        default = mkNixtraOption lib.types.str "America/New_York"
-          "The geographical location that the timezone should be configured for.";
+        auto =
+          mkNixtraOption lib.types.bool true
+            "Whether to set the timezone by default. If set to true, `config.nixtra.timezone.default` will be ignored.";
+        default =
+          mkNixtraOption lib.types.str "America/New_York"
+            "The geographical location that the timezone should be configured for.";
       };
-      locale = mkNixtraOption lib.types.str "en_US.UTF-8"
-        "The languages localization to use.";
-      version =
-        mkNixtraOption lib.types.str "25.11" "The version of the NixOS system.";
-      initialVersion = mkNixtraOption lib.types.str "25.05"
-        "The initial version the NixOS system was installed on.";
+      locale = mkNixtraOption lib.types.str "en_US.UTF-8" "The languages localization to use.";
+      version = mkNixtraOption lib.types.str "25.11" "The version of the NixOS system.";
+      initialVersion =
+        mkNixtraOption lib.types.str "25.05"
+          "The initial version the NixOS system was installed on.";
 
-      filesystem =
-        mkNixtraOption lib.types.str "btrfs" "The filesystem to use.";
-      supportedFilesystems = mkNixtraOption (lib.types.listOf lib.types.str) [
-        "btrfs"
-        "ext4"
-        "ntfs"
-      ]
-        "The filesystems the system should support. The necessary kernel modules for them are automatically installed.";
+      filesystem = mkNixtraOption lib.types.str "btrfs" "The filesystem to use.";
+      supportedFilesystems =
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          [
+            "btrfs"
+            "ext4"
+            "ntfs"
+          ]
+          "The filesystems the system should support. The necessary kernel modules for them are automatically installed.";
 
-      nur = mkNixtraOption lib.types.bool true
-        "Whether to use the NixOS User Repository, a community repository for Nix packages.";
+      nur =
+        mkNixtraOption lib.types.bool true
+          "Whether to use the NixOS User Repository, a community repository for Nix packages.";
 
-      nixDirectories = mkNixtraOption (lib.types.listOf lib.types.str) [
-        "modules"
-        "presets"
-        "profiles/${settings.profile}"
-      ] (lib.mdDoc
-        "Directories with `.nix` files that should be parsed, validated, and formatted automatically by Nixtra rebuild system.");
+      nixDirectories =
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          [
+            "modules"
+            "presets"
+            "profiles/${settings.profile}"
+          ]
+          (
+            lib.mdDoc "Directories with `.nix` files that should be parsed, validated, and formatted automatically by Nixtra rebuild system."
+          );
     };
 
     screen = {
@@ -478,46 +544,56 @@ in {
     };
 
     display = {
-      enable =
-        mkNixtraOption lib.types.bool true "Whether to enable graphical output";
+      enable = mkNixtraOption lib.types.bool true "Whether to enable graphical output";
 
-      server = mkNixtraOption (lib.types.enum [ "wayland" "none" ]) "wayland"
-        (lib.mdDoc "Available options: `wayland`, `none`.");
+      server = mkNixtraOption (lib.types.enum [
+        "wayland"
+        "none"
+      ]) "wayland" (lib.mdDoc "Available options: `wayland`, `none`.");
 
-      themeType = mkNixtraOption (lib.types.enum [ "dark" "light" "" ]) "dark"
-        (lib.mdDoc "Available options: `dark`, `light`, `''`.");
+      themeType = mkNixtraOption (lib.types.enum [
+        "dark"
+        "light"
+        ""
+      ]) "dark" (lib.mdDoc "Available options: `dark`, `light`, `''`.");
     };
 
     desktop = {
-      enable = mkNixtraOption lib.types.bool true
-        "Whether to enable desktop environment configuration.";
+      enable = mkNixtraOption lib.types.bool true "Whether to enable desktop environment configuration.";
 
-      startupPrograms = mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-        "List of programs to launch on startup.";
+      startupPrograms =
+        mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+          "List of programs to launch on startup.";
 
       wallpaper = {
-        directory = mkNixtraOption lib.types.str "$HOME/Wallpapers"
-          "Directory where wallpapers are stored.";
-        preference = mkNixtraOption lib.types.str ""
-          "Preferred wallpaper path relative to the wallpaper directory. If not set, a random one will be used.";
-        extensions =
-          mkNixtraOption (lib.types.listOf lib.types.str) [ "png" "jpg" "gif" ]
-          "File extensions to look for in the wallpaper directory.";
-        switchInterval = mkNixtraOption lib.types.int (120 * 60)
-          "Seconds after which wallpaper should be switched. Default: 2 hours (120 minutes).";
+        directory =
+          mkNixtraOption lib.types.str "$HOME/Wallpapers"
+            "Directory where wallpapers are stored.";
+        preference =
+          mkNixtraOption lib.types.str ""
+            "Preferred wallpaper path relative to the wallpaper directory. If not set, a random one will be used.";
+        extensions = mkNixtraOption (lib.types.listOf lib.types.str) [
+          "png"
+          "jpg"
+          "gif"
+        ] "File extensions to look for in the wallpaper directory.";
+        switchInterval = mkNixtraOption lib.types.int (
+          120 * 60
+        ) "Seconds after which wallpaper should be switched. Default: 2 hours (120 minutes).";
       };
 
-      languages = mkNixtraOption (lib.types.listOf lib.types.str) [ "en" ]
-        "The language keyboard layouts to use in desktop environments.";
+      languages = mkNixtraOption (lib.types.listOf lib.types.str) [
+        "en"
+      ] "The language keyboard layouts to use in desktop environments.";
 
       keybind = {
-        numpadCompatibility = mkNixtraOption lib.types.bool false
-          "Whether to replace Numpad keybinds with keys compatible with most keyboards.";
+        numpadCompatibility =
+          mkNixtraOption lib.types.bool false
+            "Whether to replace Numpad keybinds with keys compatible with most keyboards.";
       };
 
       topbar = {
-        enable =
-          mkNixtraOption lib.types.bool true "Whether to enable the top bar.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable the top bar.";
       };
 
       theme = {
@@ -526,19 +602,20 @@ in {
         };
 
         qt = {
-          package = mkNixtraOption lib.types.package pkgs.utterly-nord-plasma
-            "The package containing the Qt theme";
-          selection = mkNixtraOption lib.types.str "Utterly-Nord" (lib.mdDoc
-            "The name of a theme provided in the `share/Kvantum` directory of it.");
+          package =
+            mkNixtraOption lib.types.package pkgs.utterly-nord-plasma
+              "The package containing the Qt theme";
+          selection = mkNixtraOption lib.types.str "Utterly-Nord" (
+            lib.mdDoc "The name of a theme provided in the `share/Kvantum` directory of it."
+          );
         };
       };
 
       taskbar = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable the bottom taskbar.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable the bottom taskbar.";
         apps = lib.mkOption {
           type = (lib.types.listOf taskbarAppType);
-          #default = [ ];
+          default = [ ];
           description = "List of applications to add to the bottom taskbar.";
           example = [
             {
@@ -595,101 +672,156 @@ in {
             }
           ];
         };
-        iconSize = mkNixtraOption lib.types.int 38
-          "Size of icons in the bottom taskbar (e.g., 50 for 50x50).";
+        iconSize =
+          mkNixtraOption lib.types.int 38
+            "Size of icons in the bottom taskbar (e.g., 50 for 50x50).";
       };
 
       programs = mkNixtraOption (lib.types.listOf envProgramType) [
         {
           program = "ssh";
-          envVars = { TERM = "xterm-256color"; };
+          envVars = {
+            TERM = "xterm-256color";
+          };
         }
         {
           program = "lxappearance";
-          envVars = { GDK_BACKEND = "x11"; };
+          envVars = {
+            GDK_BACKEND = "x11";
+          };
         }
       ] "List of programs and their specific environment variables.";
 
-      mimeapps =
-        mkNixtraOption (lib.types.attrsOf (lib.types.listOf lib.types.str)) { }
-        "A mapping of MIME types to preferred default applications (.desktop file names).";
+      mimeapps = mkNixtraOption (lib.types.attrsOf (
+        lib.types.listOf lib.types.str
+      )) { } "A mapping of MIME types to preferred default applications (.desktop file names).";
     };
 
     audio = {
       enable = mkNixtraOption lib.types.bool true "Whether to enable audio.";
 
-      backend =
-        mkNixtraOption (lib.types.enum [ "pipewire" "pulseaudio" "none" ])
-        "pipewire" (lib.mdDoc
-          "Available audio backends: `pipewire`, `pulseaudio`, `none`.");
+      backend = mkNixtraOption (lib.types.enum [
+        "pipewire"
+        "pulseaudio"
+        "none"
+      ]) "pipewire" (lib.mdDoc "Available audio backends: `pipewire`, `pulseaudio`, `none`.");
     };
 
     network = {
-      dns = mkNixtraOption (lib.types.listOf lib.types.str) [
-        "94.140.14.14" # AdGuard
-        "84.200.69.80" # DNS.Watch
-        "91.239.100.100" # UncensoredDNS (primary)
-        "89.233.43.71" # UncensoredDNS (secondary)
-        "8.26.56.26" # Comodo (primary)
-        "8.20.247.20" # Comodo (secondary)
-      ] (lib.mdDoc ''
-        List of DNS servers to use ONLY if VPN is disabled. These are some standard DNS servers that provide privacy.
-        Do not set "127.0.0.53" here if systemd-resolved is enabled.
-      '');
-      fallbackDns =
-        mkNixtraOption (lib.types.listOf lib.types.str) [ "1.1.1.1" "8.8.8.8" ]
-        "List of DNS servers to use as fallback ONLY if VPN is disabled.";
+      dns =
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          [
+            "94.140.14.14" # AdGuard
+            "84.200.69.80" # DNS.Watch
+            "91.239.100.100" # UncensoredDNS (primary)
+            "89.233.43.71" # UncensoredDNS (secondary)
+            "8.26.56.26" # Comodo (primary)
+            "8.20.247.20" # Comodo (secondary)
+          ]
+          (
+            lib.mdDoc ''
+              List of DNS servers to use ONLY if VPN is disabled. These are some standard DNS servers that provide privacy.
+              Do not set "127.0.0.53" here if systemd-resolved is enabled.
+            ''
+          );
+      fallbackDns = mkNixtraOption (lib.types.listOf lib.types.str) [
+        "1.1.1.1"
+        "8.8.8.8"
+      ] "List of DNS servers to use as fallback ONLY if VPN is disabled.";
     };
 
     kernel = {
-      enableNonfreeFirmware = mkNixtraOption lib.types.bool false
-        "Whether to install and enable non-free firmware. May be needed for things like wireless networking.";
-      extraPackages = mkNixtraOption (lib.types.listOf lib.types.package) [ ]
-        "List of additional kernel module packages to install";
+      type =
+        mkNixtraOption
+          (lib.types.enum [
+            "standard"
+            "security"
+            "gaming"
+            "custom"
+          ])
+          "security"
+          (
+            lib.mdDoc "The Linux kernel variant to use. Choose `standard` for the normal kernel, `security` for enhanced hardening measures, and `gaming` for performance optimizations."
+          );
+
+      customKernel = mkNixtraOption lib.types.str "" "Custom Linux kernel to specify.";
+
+      supportAll =
+        mkNixtraOption lib.types.bool false
+          "Whether to support all hardware and firmware. May be required to fix some modprobe or other module-shrinking issues in some releases. Not enabled by default because it introduces security risks.";
+      enableNonfreeFirmware =
+        mkNixtraOption lib.types.bool false
+          "Whether to install and enable non-free firmware. May be needed for things like wireless networking.";
+      extraPackages =
+        mkNixtraOption (lib.types.listOf lib.types.package) [ ]
+          "List of additional kernel module packages to install";
     };
 
     security = {
-      autoUpdate = mkNixtraOption lib.types.bool true
-        "Whether to enable automatic system updates.";
-      gc = mkNixtraOption lib.types.bool true
-        "Whether to enable automatic garbage collection.";
-      networking = mkNixtraOption lib.types.bool true
-        "Whether to enable general networking capabilities for the system.";
-      replaceSudoWithDoas = mkNixtraOption lib.types.bool true
-        "Whether to replace `sudo` command with a more lightweight alternative (`doas`).";
+      hyperfagia = {
+        spl = mkNixtraOption (lib.types.functionTo (lib.types.listOf lib.types.package)) (
+          pkgs: [ ]
+        ) "Secondary package list";
+      };
 
-      fhsCompatibilityMode = mkNixtraOption lib.types.bool false
-        "Whether to have compatibility with apps that use the standard Linux FHS. (Populates `/bin` and `/usr/bin`, allows running unpatched dynamic binaries.)";
+      autoUpdate = mkNixtraOption lib.types.bool true "Whether to enable automatic system updates.";
+      gc = mkNixtraOption lib.types.bool true "Whether to enable automatic garbage collection.";
+      networking =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable general networking capabilities for the system.";
+      replaceSudoWithDoas =
+        mkNixtraOption lib.types.bool true
+          "Whether to replace `sudo` command with a more lightweight alternative (`doas`).";
+
+      aggressivelyRemoveVerificationMeasures =
+        mkNixtraOption lib.types.bool true
+          "Whether to remove components from software that comply with recent regulatory attempts to introduce intrusive verification systems to Linux, such as age verification.";
+
+      fhsCompatibilityMode =
+        mkNixtraOption lib.types.bool false
+          "Whether to have compatibility with apps that use the standard Linux FHS. (Populates `/bin` and `/usr/bin`, allows running unpatched dynamic binaries.)";
 
       kernel = {
-        aggressivePanic = mkNixtraOption lib.types.bool true
-          "Whether to panic immediately on any detected failure or potential vulnerabiltiy exploitation.";
-        veryAggressivePanic = mkNixtraOption lib.types.bool true
-          "Whether to panic immediately on any potential failures, including subtle warnings.";
-        mitigateCommonVulnerabilities = mkNixtraOption lib.types.bool true
-          "Whether to mitigate common CPU vulnerabilities across various architectures.";
-        enforceDmaProtection = mkNixtraOption lib.types.bool true
-          "Whether to enforce runtime DMA protection. (May interfere with common devices.)";
-        requireSignatures = mkNixtraOption lib.types.bool true
-          "Whether to allow only signed kernel modules. (May break Nvidia or VBox drivers.)";
-        encryptMemory = mkNixtraOption lib.types.bool true
-          "Whether to encrypt physical memory using architecture-specific solutions.";
+        aggressivePanic =
+          mkNixtraOption lib.types.bool true
+            "Whether to panic immediately on any detected failure or potential vulnerabiltiy exploitation.";
+        veryAggressivePanic =
+          mkNixtraOption lib.types.bool true
+            "Whether to panic immediately on any potential failures, including subtle warnings.";
+        mitigateCommonVulnerabilities =
+          mkNixtraOption lib.types.bool true
+            "Whether to mitigate common CPU vulnerabilities across various architectures.";
+        enforceDmaProtection =
+          mkNixtraOption lib.types.bool true
+            "Whether to enforce runtime DMA protection. (May interfere with common devices.)";
+        requireSignatures =
+          mkNixtraOption lib.types.bool true
+            "Whether to allow only signed kernel modules. (May break Nvidia or VBox drivers.)";
+        encryptMemory =
+          mkNixtraOption lib.types.bool true
+            "Whether to encrypt physical memory using architecture-specific solutions.";
       };
 
       nmConnectionRouterDnsExceptions =
-        mkNixtraOption (lib.types.listOf lib.types.str) ([ "lo" "docker0" ]
-          ++ (if cfg.security.vpn.enable && cfg.security.vpn.type
-          == "mullvad" then
-            [ "wg0-mullvad" ]
-          else
-            [ ])) (lib.mdDoc ''
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          (
+            [
+              "lo"
+              "docker0"
+            ]
+            ++ (
+              if cfg.security.vpn.enable && cfg.security.vpn.type == "mullvad" then [ "wg0-mullvad" ] else [ ]
+            )
+          )
+          (
+            lib.mdDoc ''
               NetworkManager connections for which DNS configuration from the router
               SHOULD be used, bypassing custom DNS config.nixtra.
-            '');
+            ''
+          );
 
       firewall = {
-        enable =
-          mkNixtraOption lib.types.bool true "Whether to enable the firewall.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable the firewall.";
         allowedTCPPorts = mkNixtraOption (lib.types.listOf lib.types.port) [
           80
           443
@@ -699,47 +831,54 @@ in {
           51820
           22
         ] "List of TCP ports to allow through the firewall.";
-        allowedUDPPorts =
-          mkNixtraOption (lib.types.listOf lib.types.port) [ 8080 51820 53 ]
-          "List of UDP ports to allow through the firewall.";
+        allowedUDPPorts = mkNixtraOption (lib.types.listOf lib.types.port) [
+          8080
+          51820
+          53
+        ] "List of UDP ports to allow through the firewall.";
       };
 
-      virtualization = mkNixtraOption lib.types.bool false
-        "Whether to enable virtualization (e.g., KVM, QEMU).";
-      scanning = mkNixtraOption lib.types.bool true
-        "Whether to enable Intrusion Detection System with Suricata.";
-      aliases = mkNixtraOption lib.types.bool true
-        "Whether to enable aliases for commands such as `rm` to prevent accidental data loss.";
-      appimage = mkNixtraOption lib.types.bool true
-        "Whether to enable running programs packed into the AppImage file format.";
-      unpatchedBinaries = mkNixtraOption lib.types.bool true
-        "Whether to allow running unpatched dynamic binaries.";
-      secureboot =
-        mkNixtraOption lib.types.bool true "Whether to enable secure boot.";
-      disableUsbStorage =
-        mkNixtraOption lib.types.bool false "Whether to disable USB storage";
-      protectUsbStorage = mkNixtraOption lib.types.bool true
-        "Whether to apply special security measures for connected USB devices.";
-      protectBoot = mkNixtraOption lib.types.bool true
-        "Whether to protect the kernel with boot related parameters.";
-      protectKernel =
-        mkNixtraOption lib.types.bool true "Whether to protect the kernel.";
-      impermanence = mkNixtraOption lib.types.bool false (lib.mdDoc ''
-        Whether to use the NixOS Impermanence mechanism.
-        Will only work if `config.nixtra.system.filesystem` is set to `btrfs`.
-      '');
+      virtualization =
+        mkNixtraOption lib.types.bool false
+          "Whether to enable virtualization (e.g., KVM, QEMU).";
+      scanning =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable Intrusion Detection System with Suricata.";
+      aliases =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable aliases for commands such as `rm` to prevent accidental data loss.";
+      appimage =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable running programs packed into the AppImage file format.";
+      unpatchedBinaries =
+        mkNixtraOption lib.types.bool true
+          "Whether to allow running unpatched dynamic binaries.";
+      secureboot = mkNixtraOption lib.types.bool true "Whether to enable secure boot.";
+      disableUsbStorage = mkNixtraOption lib.types.bool false "Whether to disable USB storage";
+      protectUsbStorage =
+        mkNixtraOption lib.types.bool true
+          "Whether to apply special security measures for connected USB devices.";
+      protectBoot =
+        mkNixtraOption lib.types.bool true
+          "Whether to protect the kernel with boot related parameters.";
+      protectKernel = mkNixtraOption lib.types.bool true "Whether to protect the kernel.";
+      impermanence = mkNixtraOption lib.types.bool false (
+        lib.mdDoc ''
+          Whether to use the NixOS Impermanence mechanism.
+          Will only work if `config.nixtra.system.filesystem` is set to `btrfs`.
+        ''
+      );
 
       apparmor = {
-        enable =
-          mkNixtraOption lib.types.bool true "Whether to enable AppArmor.";
-        rescueBootEntry = mkNixtraOption lib.types.bool true
-          "Whether to add an auxiliary boot entry in case you get locked out of your system because of AppArmor. Strongly recommended.";
+        enable = mkNixtraOption lib.types.bool false "Whether to enable AppArmor.";
+        rescueBootEntry =
+          mkNixtraOption lib.types.bool true
+            "Whether to add an auxiliary boot entry in case you get locked out of your system because of AppArmor. Strongly recommended.";
       };
 
       siem = {
         zeek = {
-          enable = mkNixtraOption lib.types.bool true
-            "Whether to enable the Zeek service.";
+          enable = mkNixtraOption lib.types.bool true "Whether to enable the Zeek service.";
           interface = lib.mkOption {
             type = lib.types.str;
             description = "The interface Zeek should listen on.";
@@ -747,21 +886,21 @@ in {
         };
 
         wazuh = {
-          enable = mkNixtraOption lib.types.bool true
-            "Whether to enable the Wazuh service.";
+          enable = mkNixtraOption lib.types.bool true "Whether to enable the Wazuh service.";
         };
       };
 
       vpn = {
-        enable = mkNixtraOption lib.types.bool false
-          "Whether to enable the VPN configuration.";
-        type =
-          mkNixtraOption (lib.types.enum [ "mullvad" "wireguard" ]) "mullvad"
-          "The type of VPN to configure.";
+        enable = mkNixtraOption lib.types.bool false "Whether to enable the VPN configuration.";
+        type = mkNixtraOption (lib.types.enum [
+          "mullvad"
+          "wireguard"
+        ]) "mullvad" "The type of VPN to configure.";
 
         dnsLeakPrevention = {
-          dnsLeakTest = mkNixtraOption lib.types.bool true
-            "Whether to do a DNS leak test upon successful VPN connection.";
+          dnsLeakTest =
+            mkNixtraOption lib.types.bool true
+              "Whether to do a DNS leak test upon successful VPN connection.";
           nmConnectionRouterDnsExceptions = lib.mkOption {
             type = lib.types.listOf lib.types.str;
             default = [ ];
@@ -773,10 +912,12 @@ in {
         };
 
         wireguard = {
-          addresses = mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-            "List of IP addresses for the WireGuard interface.";
-          privateKey = mkNixtraOption lib.types.str "vpn/wireguard/private_key"
-            "SOPS path to WireGuard private key.";
+          addresses =
+            mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+              "List of IP addresses for the WireGuard interface.";
+          privateKey =
+            mkNixtraOption lib.types.str "vpn/wireguard/private_key"
+              "SOPS path to WireGuard private key.";
           publicKey = lib.mkOption {
             type = lib.types.str;
             description = "WireGuard public key.";
@@ -785,28 +926,30 @@ in {
             type = lib.types.str;
             description = "WireGuard endpoint IP address or hostname.";
           };
-          endpointPort =
-            mkNixtraOption lib.types.port 51820 "WireGuard endpoint UDP port.";
+          endpointPort = mkNixtraOption lib.types.port 51820 "WireGuard endpoint UDP port.";
         };
       };
 
       firejail = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable Firejail for application sandboxing.";
+        enable =
+          mkNixtraOption lib.types.bool true
+            "Whether to enable Firejail for application sandboxing.";
 
-        disabledProfiles = mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-          "Profiles for programs that should not be used by default.";
+        disabledProfiles =
+          mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+            "Profiles for programs that should not be used by default.";
       };
 
       excludedClipboardPrograms =
-        mkNixtraOption (lib.types.listOf lib.types.str)
-        [ "x-kde-passwordManagerHint" ] (lib.mdDoc ''
-          Applications whose clipboard content should be ignored by clipboard listeners
-          (e.g., password managers).
-        '');
+        mkNixtraOption (lib.types.listOf lib.types.str) [ "x-kde-passwordManagerHint" ]
+          (
+            lib.mdDoc ''
+              Applications whose clipboard content should be ignored by clipboard listeners
+              (e.g., password managers).
+            ''
+          );
       closeOnSuspend = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to close applications when suspending the PC.";
+        enable = mkNixtraOption lib.types.bool true "Whether to close applications when suspending the PC.";
         applications = mkNixtraOption (lib.types.listOf lib.types.str) [
           "firefox"
           "librewolf"
@@ -814,40 +957,55 @@ in {
           "freetube"
         ] "List of application names to close when suspending.";
       };
-      replaceCoreutilsWithUutils = mkNixtraOption lib.types.bool true
-        "Whether to replace GNU coreutils with uutils (Rust coreutils).";
+      replaceCoreutilsWithUutils =
+        mkNixtraOption lib.types.bool true
+          "Whether to replace GNU coreutils with uutils (Rust coreutils).";
       permittedInsecurePackages =
-        mkNixtraOption (lib.types.listOf lib.types.str) [
-          # "python-2.7.18.8"
-        ] (lib.mdDoc ''
-          List of permitted insecure packages. These may only be used under a profile
-          whose `networking` is disabled.
-        '');
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          [
+            # "python-2.7.18.8"
+          ]
+          (
+            lib.mdDoc ''
+              List of permitted insecure packages. These may only be used under a profile
+              whose `networking` is disabled.
+            ''
+          );
       permittedUnfreePackages =
-        mkNixtraOption (lib.types.listOf lib.types.str) [
-          "steam"
-          "steam-original"
-          "steam-run"
-          "steam-unwrapped"
-          "drawio" # Unfree since 24.11; 24.05 contains old build
-          "volatility3"
-          "davinci-resolve"
-        ] (lib.mdDoc ''
-          List of explicitly permitted unfree packages.
-        '');
+        mkNixtraOption (lib.types.listOf lib.types.str)
+          [
+            "steam"
+            "steam-original"
+            "steam-run"
+            "steam-unwrapped"
+            "drawio" # Unfree since 24.11; 24.05 contains old build
+            "volatility3"
+            "davinci-resolve"
+          ]
+          (
+            lib.mdDoc ''
+              List of explicitly permitted unfree packages.
+            ''
+          );
 
-      extraUsers = mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-        "Extra users to define. Very limited functionality. Primarily used to store critical data safely.";
+      extraUsers =
+        mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+          "Extra users to define. Very limited functionality. Primarily used to store critical data safely.";
 
       sops = {
         keys = lib.mkOption {
-          description =
-            "The paths of the SOPS keys defined in your SOPS config.";
+          description = "The paths of the SOPS keys defined in your SOPS config.";
 
-          default = { "password" = { neededForUsers = true; }; };
+          default = {
+            "password" = {
+              neededForUsers = true;
+            };
+          };
 
           example = {
-            "vpn/wireguard/private_key" = { neededForUsers = true; };
+            "vpn/wireguard/private_key" = {
+              neededForUsers = true;
+            };
           };
         };
         templates = lib.mkOption {
@@ -862,69 +1020,81 @@ in {
     };
 
     performance = {
-      preventOutOfMemoryPanic = mkNixtraOption lib.types.bool true
-        (lib.mdDoc "Whether to prevent OOM kernel panic with earlyoom.");
-      useHugePages = mkNixtraOption lib.types.bool false
-        "Whether to use larger memory pages than the default 4 KB page size; reduce TLB misses, improve memory throughput. Disabled by default because it may disable physical KASLR for certain machines.";
-      monitorServices = mkNixtraOption lib.types.bool true
-        "Whether to monitor and manage systemd services with monit service.";
-      monitorDeviceHealth = mkNixtraOption lib.types.bool true
-        "Whether to monitor device health and send critical notifications with smartd service.";
-      watchdog = mkNixtraOption lib.types.bool true
-        "Whether to enable watchdog, which checks if a serious problem has occurred and automatically restarts if so.";
+      preventOutOfMemoryPanic = mkNixtraOption lib.types.bool true (
+        lib.mdDoc "Whether to prevent OOM kernel panic with earlyoom."
+      );
+      useHugePages =
+        mkNixtraOption lib.types.bool false
+          "Whether to use larger memory pages than the default 4 KB page size; reduce TLB misses, improve memory throughput. Disabled by default because it may disable physical KASLR for certain machines.";
+      monitorServices =
+        mkNixtraOption lib.types.bool true
+          "Whether to monitor and manage systemd services with monit service.";
+      monitorDeviceHealth =
+        mkNixtraOption lib.types.bool true
+          "Whether to monitor device health and send critical notifications with smartd service.";
+      watchdog =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable watchdog, which checks if a serious problem has occurred and automatically restarts if so.";
+    };
+
+    monitoring = {
+      enable =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable advanced system monitoring services.";
+      # TODO: Add Netdata stack alternative
+      stack = mkNixtraOption (lib.types.enum [
+        "prometheus-grafana"
+      ]) "prometheus-grafana" "The service stack that should be used for monitoring.";
     };
 
     anonymity = {
-      spoofMacAddress = mkNixtraOption lib.types.bool true
-        "Whether to spoof the MAC address of network interfaces.";
-      spoofMiscIdentifiers = mkNixtraOption lib.types.bool false
-        "Whether to spoof various miscellaneous system identifiers.";
+      spoofMacAddress =
+        mkNixtraOption lib.types.bool true
+          "Whether to spoof the MAC address of network interfaces.";
+      spoofMiscIdentifiers =
+        mkNixtraOption lib.types.bool false
+          "Whether to spoof various miscellaneous system identifiers.";
     };
 
     networks = {
       tornet = {
-        enable = mkNixtraOption lib.types.bool false
-          "Whether to enable the Onion network subnet (Tor).";
-        subnet = mkNixtraOption lib.types.str "192.168.2.0/24"
-          "The subnet to use for the Tor network.";
+        enable = mkNixtraOption lib.types.bool false "Whether to enable the Onion network subnet (Tor).";
+        subnet = mkNixtraOption lib.types.str "192.168.2.0/24" "The subnet to use for the Tor network.";
       };
     };
 
     browser = {
-      closeOnSuspend = mkNixtraOption lib.types.bool true
-        "Whether to close the browser after waking up from suspend for security reasons.";
-      useBetterfox = mkNixtraOption lib.types.bool true
-        "Whether to apply Betterfox configuration to supported browsers.";
+      closeOnSuspend =
+        mkNixtraOption lib.types.bool true
+          "Whether to close the browser after waking up from suspend for security reasons.";
+      useBetterfox =
+        mkNixtraOption lib.types.bool true
+          "Whether to apply Betterfox configuration to supported browsers.";
     };
 
     git = {
-      signCommits = mkNixtraOption lib.types.bool true
-        "Whether to sign Git commits by default.";
-      randomizeCommitDate = mkNixtraOption lib.types.bool true
-        "Whether to randomize Git commit dates.";
+      signCommits = mkNixtraOption lib.types.bool true "Whether to sign Git commits by default.";
+      randomizeCommitDate = mkNixtraOption lib.types.bool true "Whether to randomize Git commit dates.";
 
       proxy = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable a proxy for Git operations.";
-        address = mkNixtraOption lib.types.str "socks5://127.0.0.1:9152"
-          "The address of the Git proxy.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable a proxy for Git operations.";
+        address = mkNixtraOption lib.types.str "socks5://127.0.0.1:9351" "The address of the Git proxy.";
       };
 
       autoPush = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable automatic Git pushes.";
-        time = mkNixtraOption lib.types.str "00:00"
-          "The scheduled time for automatic Git pushes.";
-        repositories = mkNixtraOption (lib.types.listOf gitRepoType) [{
-          service = "*";
-          owner = "*";
-          repository = "*";
-        }] "List of repositories to automatically push. Use '*' for all.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable automatic Git pushes.";
+        time = mkNixtraOption lib.types.str "00:00" "The scheduled time for automatic Git pushes.";
+        repositories = mkNixtraOption (lib.types.listOf gitRepoType) [
+          {
+            service = "*";
+            owner = "*";
+            repository = "*";
+          }
+        ] "List of repositories to automatically push. Use '*' for all.";
       };
 
       autoClone = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable automatic Git clones.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable automatic Git clones.";
         repositories = mkNixtraOption (lib.types.listOf gitRepoType) [
           {
             service = "github";
@@ -942,33 +1112,30 @@ in {
 
     ssh = {
       enable = mkNixtraOption lib.types.bool true "Whether to enable SSH";
-      permitRootLogin = mkNixtraOption lib.types.bool false
-        "Whether to permit root login (insecure)";
-      hosts = mkNixtraOption (lib.types.attrsOf sshHostType) { }
-        "Configuration for SSH hosts";
+      permitRootLogin = mkNixtraOption lib.types.bool false "Whether to permit root login (insecure)";
+      hosts = mkNixtraOption (lib.types.attrsOf sshHostType) { } "Configuration for SSH hosts";
       rootAuthorizedKeySecrets =
         mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-        "List of SOPS secret names for connecting to user with authorized SSH keys";
+          "List of SOPS secret names for connecting to user with authorized SSH keys";
       userAuthorizedKeySecrets =
         mkNixtraOption (lib.types.listOf lib.types.str) [ ]
-        "List of SOPS secret names for connecting to root with authorized SSH keys";
-      useTerminalForPassword = mkNixtraOption lib.types.bool true
-        "Whether to use terminal for getting SSH passphrase.";
+          "List of SOPS secret names for connecting to root with authorized SSH keys";
+      useTerminalForPassword =
+        mkNixtraOption lib.types.bool true
+          "Whether to use terminal for getting SSH passphrase.";
     };
 
     i2p = {
-      enable =
-        mkNixtraOption lib.types.bool false "Whether to enable I2P (i2pd)";
+      enable = mkNixtraOption lib.types.bool false "Whether to enable I2P (i2pd)";
     };
 
     tor = {
-      enable =
-        mkNixtraOption lib.types.bool true "Whether to enable Tor services.";
-      isRunMoneroNode = mkNixtraOption lib.types.bool true
-        "Whether to listen to ports for hidden services if running a local Monero node.";
+      enable = mkNixtraOption lib.types.bool true "Whether to enable Tor services.";
+      isRunMoneroNode =
+        mkNixtraOption lib.types.bool true
+          "Whether to listen to ports for hidden services if running a local Monero node.";
       aliases = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable Tor aliases for programs.";
+        enable = mkNixtraOption lib.types.bool true "Whether to enable Tor aliases for programs.";
         programs = mkNixtraOption (lib.types.listOf torAliasProgramType) [
           # { program = "${pkgs.freetube}/bin/freetube"; }
           # { program = "com.cakewallet.CakeWallet"; }
@@ -977,27 +1144,27 @@ in {
       services = mkNixtraOption (lib.types.listOf torProxyServiceType) [
         {
           enable = true;
-          tag = "git";
-          port = 9152;
+          tag = "git-tor";
+          port = 9351;
         }
         {
           enable = true;
           tag = "yellow";
-          port = 9150;
+          port = 9350;
         }
         {
           enable = true;
           tag = "cakewallet";
-          port = 9151;
+          port = 9352;
         }
       ] "List of Tor hidden services to configure.";
     };
 
     microsocks = {
-      enable = mkNixtraOption lib.types.bool true
-        "Whether to enable Microsocks proxy.";
-      services = mkNixtraOption (lib.types.listOf
-        microsocksProxyServiceType) [{ # Used by Tor Browser yellow flavor (see 04-hardening.md)
+      enable = mkNixtraOption lib.types.bool true "Whether to enable Microsocks proxy.";
+      services = mkNixtraOption (lib.types.listOf microsocksProxyServiceType) [
+        {
+          # Used by Tor Browser yellow flavor (see 04-hardening.md)
           enable = true;
           tag = "yellow";
           port = 1080;
@@ -1013,21 +1180,22 @@ in {
               port = 4145;
             } # Public anonymous proxy (supports HTTPS)
           ];
-        }] "List of Microsocks proxy services to configure.";
+        }
+      ] "List of Microsocks proxy services to configure.";
     };
 
     miniflux = {
-      enable = mkNixtraOption lib.types.bool true
-        "Whether to enable the Miniflux RSS reading frontend.";
-      adminSecret = mkNixtraOption lib.types.str "miniflux/admin"
-        "SOPS secret key name for admin environment credentials.";
+      enable = mkNixtraOption lib.types.bool true "Whether to enable the Miniflux RSS reading frontend.";
+      adminSecret =
+        mkNixtraOption lib.types.str "miniflux/admin"
+          "SOPS secret key name for admin environment credentials.";
     };
 
     shell = {
-      enable = mkNixtraOption lib.types.bool true
-        "Whether to enable custom shell configurations.";
-      ai_integration = mkNixtraOption lib.types.bool false
-        "Whether to enable AI integration for Kitty terminal (code complete, chat).";
+      enable = mkNixtraOption lib.types.bool true "Whether to enable custom shell configurations.";
+      ai_integration =
+        mkNixtraOption lib.types.bool false
+          "Whether to enable AI integration for Kitty terminal (code complete, chat).";
       aliases = mkNixtraOption (lib.types.attrsOf lib.types.str) {
         rm = "${pkgs.trash-cli}/bin/trash";
         neofetch = "${pkgs.fastfetch}/bin/fastfetch";
@@ -1042,37 +1210,50 @@ in {
         du = "${pkgs.dust}/bin/dust";
         diff = "${pkgs.difftastic}/bin/difft";
         grep = "${pkgs.ripgrep}/bin/rg";
-        vim = "${pkgs.neovim}/bin/nvim";
+        rename = "${pkgs.file-rename}/bin/rename";
+        sed = "${pkgs.sd}/bin/sd";
+        top = "${pkgs.htop}/bin/htop";
+
+        # FIXME
+        #vim = "${pkgs.neovim}/bin/nvim";
+
         #top = "${pkgs.bottom}/bin/bottom";
       } "A mapping of shell command aliases.";
-      fastfetchOnStartup = mkNixtraOption lib.types.bool true
-        "Whether to show information similar to neofetch on shell startup.";
+      fastfetchOnStartup =
+        mkNixtraOption lib.types.bool true
+          "Whether to show information similar to neofetch on shell startup.";
       commands = {
-        enable = mkNixtraOption lib.types.bool true
-          "Whether to enable special Nixtra commands (e.g., `nixtra-screenshot`).";
-        prefix = mkNixtraOption lib.types.str "nixtra" (lib.mdDoc ''
-          The prefix to use for Nixtra commands (e.g., `nixtra` for `nixtra-screenshot`).
-          WARNING: changing this may break raw configs that expect it to be the default.
-          It is advised that you do not modify it.
-        '');
+        enable =
+          mkNixtraOption lib.types.bool true
+            "Whether to enable special Nixtra commands (e.g., `nixtra-screenshot`).";
+        prefix = mkNixtraOption lib.types.str "nixtra" (
+          lib.mdDoc ''
+            The prefix to use for Nixtra commands (e.g., `nixtra` for `nixtra-screenshot`).
+            WARNING: changing this may break raw configs that expect it to be the default.
+            It is advised that you do not modify it.
+          ''
+        );
       };
+      environmentVariables =
+        mkNixtraOption (lib.types.attrsOf lib.types.str) { }
+          "Set of environment variables to be applied for the user and system shell.";
     };
 
     flatpak = {
-      enable = mkNixtraOption lib.types.bool false
-        "Whether to enable Flatpak support.";
-      sources = mkNixtraOption (lib.types.listOf flatpakSourceType) [{
-        name = "flathub";
-        source = "https://dl.flathub.org/repo/flathub.flatpakrepo";
-        allowForUser = true;
-      }] "List of Flatpak repositories to configure.";
+      enable = mkNixtraOption lib.types.bool false "Whether to enable Flatpak support.";
+      sources = mkNixtraOption (lib.types.listOf flatpakSourceType) [
+        {
+          name = "flathub";
+          source = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+          allowForUser = true;
+        }
+      ] "List of Flatpak repositories to configure.";
       apps = lib.mkOption {
         type = lib.types.listOf flatpakAppType;
         example = [
           {
             app = "com.cakewallet.CakeWallet";
-            url =
-              "https://github.com/cake-tech/cake_wallet/releases/download/v4.25.0/Cake_Wallet_v4.25.0_Linux_Beta.flatpak";
+            url = "https://github.com/cake-tech/cake_wallet/releases/download/v4.25.0/Cake_Wallet_v4.25.0_Linux_Beta.flatpak";
             user = false;
           }
           {
@@ -1115,6 +1296,25 @@ in {
       };
     };
 
+    ai = {
+      comfyui = {
+        enable =
+          mkNixtraOption lib.types.bool false
+            "Whether to enable ComfyUI, an image generation pipeline orchestrator.";
+
+        useOutdatedAmdGpuWorkaround =
+          mkNixtraOption lib.types.bool false
+            "Whether to use a workaround that allows old AMD GPUs (e.g. Polaris architecture) to be recognized.";
+
+      };
+
+      prompt = {
+        wordsToRedact =
+          mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+            "List of keywords to redact when building a context prompt.";
+      };
+    };
+
     searx = {
       secretPath = lib.mkOption {
         type = lib.types.str;
@@ -1122,20 +1322,34 @@ in {
       };
     };
 
-    scheduledTasks = mkNixtraOption (lib.types.listOf scheduledTaskType) [ ]
-      "List of scheduled system tasks.";
+    scheduledTasks =
+      mkNixtraOption (lib.types.listOf scheduledTaskType) [ ]
+        "List of scheduled system tasks.";
 
     debug = {
-      persistJournalLogs = mkNixtraOption lib.types.bool false
-        "Whether to persist journal logs across reboots.";
+      persistJournalLogs =
+        mkNixtraOption lib.types.bool false
+          "Whether to persist journal logs across reboots.";
 
-      doVerboseKernelLogs = mkNixtraOption lib.types.bool false
-        "Whether to allow the kernel to make extraneous logs.";
+      doVerboseKernelLogs =
+        mkNixtraOption lib.types.bool false
+          "Whether to allow the kernel to make extraneous logs.";
+    };
+
+    neovim = {
+      isNixvimUsed =
+        mkNixtraOption lib.types.bool false
+          "Whether NixVim is used in place of vanilla NeoVim.";
+    };
+
+    sudo = {
+      environmentVariablesToRetainForShell =
+        mkNixtraOption (lib.types.listOf lib.types.str) [ ]
+          "Environment variables that should be kept from the environment of the user who is executing the sudo command and forwarded to the root user's new environment, with the same values.";
     };
 
     fun = {
-      mysteriousFortuneCookie =
-        mkNixtraOption lib.types.bool true "Would You Like To Have Some Fun?";
+      mysteriousFortuneCookie = mkNixtraOption lib.types.bool true "Would You Like To Have Some Fun?";
     };
   };
 }

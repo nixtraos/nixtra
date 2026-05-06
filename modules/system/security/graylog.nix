@@ -12,10 +12,12 @@
         "http.port" = 9200;
         "transport.host" = "127.0.0.1";
         "transport.tcp.port" = 9300;
-        "xpack.security.enabled" =
-          false; # Disable for initial setup, enable for production
+        "xpack.security.enabled" = false; # Disable for initial setup, enable for production
         "discovery.type" = "single-node"; # For single node setup
-        "jvm.options" = [ "-Xms2g" "-Xmx2g" ];
+        "jvm.options" = [
+          "-Xms2g"
+          "-Xmx2g"
+        ];
       };
       # If you need plugins, define them here:
       # plugins = [

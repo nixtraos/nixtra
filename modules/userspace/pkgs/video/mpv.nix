@@ -1,4 +1,9 @@
-{ config, nixtraLib, pkgs, ... }:
+{
+  config,
+  nixtraLib,
+  pkgs,
+  ...
+}:
 
 {
   programs.mpv.enable = true;

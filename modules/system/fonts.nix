@@ -43,9 +43,18 @@
       enable = true;
 
       defaultFonts = {
-        serif = [ "Source Serif 4" "Merriweather" ];
-        sansSerif = [ "Inter" "Noto Sans" ];
-        monospace = [ "JetBrainsMono Nerd Font" "Fira Code" ];
+        serif = [
+          "Source Serif 4"
+          "Merriweather"
+        ];
+        sansSerif = [
+          "Inter"
+          "Noto Sans"
+        ];
+        monospace = [
+          "JetBrainsMono Nerd Font"
+          "Fira Code"
+        ];
         emoji = [ "Noto Color Emoji" ];
       };
     };

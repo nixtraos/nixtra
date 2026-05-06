@@ -3,8 +3,7 @@
     enable = true;
 
     # Network interface Suricata should monitor
-    interface =
-      "eth0"; # Change this to your actual interface name, e.g., wlan0, enp3s0, etc.
+    interface = "eth0"; # Change this to your actual interface name, e.g., wlan0, enp3s0, etc.
 
     # Additional options, like configuration file path or rule files, can be specified here
     #configFile = "/etc/suricata/suricata.yaml";  # Usually default

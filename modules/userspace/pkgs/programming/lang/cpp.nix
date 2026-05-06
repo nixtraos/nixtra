@@ -9,7 +9,7 @@
     meson
     ninja
     cmake
-    conan
+    #conan
     pkg-config
   ];
 

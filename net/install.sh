@@ -17,7 +17,7 @@ default_filesystem="ext4"
 
 EDITOR=${EDITOR:-nano}
 
-trap "echo \"The installation failed because an error was received. Please check \"${log_file}\" for a detailed log.\"; umount -q -R /mnt; exit 1" ERR
+trap "echo \"The installation failed because an error was received. Please check \\\"${log_file}\\\" for a detailed log.\"; umount -q -R /mnt; exit 1" ERR
 trap "umount -q -R /mnt" EXIT
 
 memory_size_is_valid() {
@@ -77,30 +77,30 @@ wait_for_partitions() {
   local partitions=$2
   local tries=0
   local max_tries=5
-  
+
   while [[ $tries -lt $max_tries ]]; do
     local found=0
     for ((i=1; i<=partitions; i++)); do
-      if [[ $device == nvme* ]]; then
+      if [[ $device == nvme* || $device == mmcblk* ]]; then
         [[ -e "/dev/${device}p${i}" ]] && ((found++))
       else
         [[ -e "/dev/${device}${i}" ]] && ((found++))
       fi
     done
-    
+
     if [[ $found -eq $partitions ]]; then
       return 0
     fi
-    
+
     ((tries++))
     sleep 1
   done
-  
+
   return 1
 }
 
 get_disk_uuid() {
-  blkid -s UUID -o value "$1" 2>log_file
+  blkid -s UUID -o value "$1" 2>>"$log_file"
 }
 
 log_header() {
@@ -126,7 +126,7 @@ validate_device() {
   [ -e "/dev/$1" ]
 }
 
-prompt_with_validation "Enter installation device (e.g. sda)" "" device \
+prompt_with_validation "Enter installation device (e.g. sda, nvme0n1)" "" device \
   "validate_device" "Device does not exist."
 
 validate_partition() {
@@ -199,11 +199,9 @@ done
 
 while true; do
   read -p "Enter timezone (e.g. America/New_York): " timezone
-
   if timedatectl list-timezones | grep -qxF "$timezone"; then
     break
   fi
-
   echo "Invalid timezone."
 done
 
@@ -228,54 +226,54 @@ if [ "$scheme" = "gpt" ]; then
   parted "/dev/$device" -s -- mkpart ESP fat32 1MB "$boot"
   parted "/dev/$device" -s -- set $boot_idx esp on
 else
-  parted "/dev/$device" -s -- mkpart primary "$boot" 100%
+  parted "/dev/$device" -s -- mkpart primary ${filesystem} "$boot" 100%
+  parted "/dev/$device" -s -- mkpart primary ext4 1MB "$boot"
   parted "/dev/$device" -s -- set $boot_idx boot on
 fi
 
 # Notify kernel of partition table changes
 partprobe "/dev/$device"
 
-if ! wait_for_partitions "$device" "$swap_idx"; then
+# Await both created partitions
+if ! wait_for_partitions "$device" 2; then
   echo "Failed to detect partitions after creation" >&2
   exit 1
 fi
-
 echo "done"
 
-# NVMe partitions have different naming (they have a 'p' before partition number)
-if [[ $device == nvme* ]]; then
+# NVMe and MMC devices have different naming (they have a 'p' before partition number)
+if [[ $device == nvme* || $device == mmcblk* ]]; then
   storage_device="/dev/${device}p${storage_idx}"
+  boot_device="/dev/${device}p${boot_idx}"
 else
   storage_device="/dev/${device}${storage_idx}"
+  boot_device="/dev/${device}${boot_idx}"
 fi
 
 if [ "$encrypt_drive" = "yes" ]; then
   decrypted_partition_device="cryptroot"
   echo -n "Encrypting storage..."
-  cryptsetup luksFormat --type luks2 --pbkdf argon2id -i 5000 -q "$storage_device"
-  cryptsetup open "$storage_device" $decrypted_partition_device
+  cryptsetup luksFormat -q --type luks2 --pbkdf argon2id -i 5000 "$storage_device"
+  cryptsetup open "$storage_device" "$decrypted_partition_device"
   storage_device="/dev/mapper/$decrypted_partition_device"
   echo "done"
 fi
 
 echo -n "Formatting partitions..."
 case "$filesystem" in
-  ext4) mkfs.ext4 -L nixos "$storage_device" ;;
-  btrfs) mkfs.btrfs -L nixos "$storage_device" ;;
-  zfs) zpool create -f rpool "$storage_device"
-       zfs create -o mountpoint=legacy rpool/root ;;
+  ext4) mkfs.ext4 -F -L nixos "$storage_device" >> "$log_file" 2>&1 ;;
+  btrfs) mkfs.btrfs -f -L nixos "$storage_device" >> "$log_file" 2>&1 ;;
+  zfs)
+    zpool create -f rpool "$storage_device" >> "$log_file" 2>&1
+    zfs create -o mountpoint=legacy rpool/root >> "$log_file" 2>&1
+    ;;
 esac
 
-if [[ $device == nvme* ]]; then
-  boot_device="/dev/${device}p${boot_idx}"
-else
-  boot_device="/dev/${device}${boot_idx}"
-fi
-
 if [ "$scheme" = "gpt" ]; then
-  mkfs.fat -F 32 -n boot "$boot_device"
+  mkfs.fat -F 32 -n boot "$boot_device" >> "$log_file" 2>&1
+else
+  mkfs.ext4 -F -L boot "$boot_device" >> "$log_file" 2>&1
 fi
-
 echo "done"
 
 echo -n "Mounting partitions..."
@@ -285,7 +283,8 @@ else
   mount "$storage_device" /mnt
 fi
 
-[ "$scheme" = "gpt" ] && mkdir -p /mnt/boot && mount -o umask=077 "/dev/disk/by-label/boot" /mnt/boot
+mkdir -p /mnt/boot
+mount -o umask=077 "$boot_device" /mnt/boot
 echo "done"
 
 echo -n "Cloning repository..."
@@ -294,18 +293,26 @@ cd /mnt/etc/nixos && git submodule update -q --init --recursive
 cd - >/dev/null
 echo "done"
 
-echo -n "Writing configuration..."
+echo -n "Configuring user profile structure..."
+# Transition from profiles/PROFILE to profiles/USER/PROFILE
+mkdir -p "/mnt/etc/nixos/profiles/$username"
+if [ -d "/mnt/etc/nixos/profiles/$profile" ]; then
+  mv "/mnt/etc/nixos/profiles/$profile" "/mnt/etc/nixos/profiles/$username/$profile"
+fi
+echo "done"
 
+echo -n "Writing configuration..."
 boot_disk_uuid=$(get_disk_uuid "$boot_device")
 storage_disk_uuid=$(get_disk_uuid "$storage_device")
+profile_settings_path="/mnt/etc/nixos/profiles/$username/$profile/profile-settings.nix"
 
 write_property "/mnt/etc/nixos/settings.nix" "disk.partitions.boot" "/dev/disk/by-uuid/$boot_disk_uuid"
 write_property "/mnt/etc/nixos/settings.nix" "disk.partitions.storage" "/dev/disk/by-uuid/$storage_disk_uuid"
 
 if [ "$encrypt_drive" = "yes" ]; then
-  decrypted_root_uuid=$(get_disk_uuid "$decrypted_partition_device")
+  decrypted_root_uuid=$(get_disk_uuid "/dev/mapper/$decrypted_partition_device")
   write_property "/mnt/etc/nixos/settings.nix" "disk.encryption.enable" "true"
-  write_property "/mnt/etc/nixos/settings.nix" "disk.encryption.decryptedRootDevice" "/dev/disk/by-uuid/$decrypted_disk_uuid"
+  write_property "/mnt/etc/nixos/settings.nix" "disk.encryption.decryptedRootDevice" "/dev/disk/by-uuid/$decrypted_root_uuid"
 fi
 
 if [ "$use_swap" = "yes" ]; then
@@ -315,32 +322,35 @@ fi
 
 write_property "/mnt/etc/nixos/settings.nix" "system.timezone" "$timezone"
 write_property "/mnt/etc/nixos/settings.nix" "system.filesystem" "$filesystem"
-
 write_property "/mnt/etc/nixos/settings.nix" "hardware.gpu" "$gpu"
-
-write_property "/mnt/etc/nixos/profiles/$profile/profile-settings.nix" "user.username" "$username"
+write_property "$profile_settings_path" "user.username" "$username"
 echo "done"
 
 echo -n "Generating hardware config..."
-nixos-generate-config --show-hardware-config > /mnt/etc/nixos/modules/system/hardware-configuration.nix 2>&1
+nixos-generate-config --show-hardware-config > /mnt/etc/nixos/modules/system/hardware-configuration.nix 2>>"$log_file"
 echo "done"
 
 echo -n "Installing system..."
-nixos-install --root /mnt --flake /mnt/etc/nixos#default --no-root-passwd >log_file 2>&1
+nixos-install --root /mnt --flake /mnt/etc/nixos#default --no-root-passwd >> "$log_file" 2>&1
 echo "done"
 
 echo -n "Setting user password..."
-nixos-enter --root /mnt --command "echo '$username:$password' | chpasswd" >log_file 2>&1
+nixos-enter --root /mnt --command "echo '$username:$password' | chpasswd" >> "$log_file" 2>&1
 echo "done"
 
 read -p "Edit settings.nix? [y/N] " edit_settings
-[[ $edit_settings =~ [Yy] ]] && $EDITOR /mnt/etc/nixos/settings.nix
+[[ $edit_settings =~ ^[Yy] ]] && $EDITOR /mnt/etc/nixos/settings.nix
 
 read -p "Edit selected profile configuration? [y/N] " edit_profile
-[[ $edit_profile =~ [Yy] ]] && $EDITOR "/mnt/etc/nixos/profiles/$profile/profile-settings.nix"
+[[ $edit_profile =~ ^[Yy] ]] && $EDITOR "$profile_settings_path"
 
-read -p "Download additional static and animated wallpapers curated by Nixtra project? (This operation may take a long time.) [y/N]" download_wallpapers
-[[ $download_wallpapers =~ [Yy] ]] git clone https://github.com/quarterstar/nixtra-wallpapers
+read -p "Download additional static and animated wallpapers curated by Nixtra project? (This operation may take a long time.) [y/N] " download_wallpapers
+if [[ $download_wallpapers =~ ^[Yy] ]]; then
+  echo "Downloading wallpapers..."
+  git clone https://github.com/quarterstar/nixtra-wallpapers "/mnt/home/$username/Wallpapers" >> "$log_file" 2>&1
+  # Ensure the cloned wallpapers belong to the user
+  nixos-enter --root /mnt --command "chown -R $username:users /home/$username/Wallpapers" >> "$log_file" 2>&1
+fi
 
-read -p "Installation complete! Reboot? [Y/n]" reboot_system
-[[ $reboot_system =~ [Nn] ]] reboot
+read -p "Installation complete! Reboot? [Y/n] " reboot_system
+[[ ! $reboot_system =~ ^[Nn] ]] && reboot

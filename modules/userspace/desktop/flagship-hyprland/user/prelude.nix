@@ -1,10 +1,17 @@
-{ nixtraLib, config, pkgs, lib, ... }:
+{
+  nixtraLib,
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   imports = [
     ../global/prelude.nix
 
     ./programs/terminal/kitty.nix
+    ./programs/terminal/tmux.nix
     ./programs/wm/hyprland/hypr.nix
     ./programs/wm/rofi.nix
     ./programs/wm/waybar/waybar.nix
@@ -24,7 +31,9 @@
   ];
 
   config.nixtra = {
-    user = { browser = lib.mkDefault "librewolf"; };
+    user = {
+      browser = lib.mkDefault "librewolf";
+    };
 
     desktop = {
       startupPrograms = lib.mkDefault [
@@ -32,7 +41,7 @@
         config.nixtra.user.browser
       ];
 
-      taskbar.apps = lib.mkDefault [
+      taskbar.apps = [
         {
           program = "${pkgs.kitty}/bin/kitty";
           icon = "terminal.png";
@@ -120,21 +129,21 @@
         "application/x-mobipocket" = [ "okular.desktop" ];
         "application/x-chm" = [ "okularApplication_chm.desktop" ];
         "application/x-fictionbook+xml" = [ "okular.desktop" ];
-        "application/vnd.oasis.opendocument.text" =
-          [ "libreoffice-writer.desktop" ];
-        "application/vnd.oasis.opendocument.spreadsheet" =
-          [ "libreoffice-calc.desktop" ];
-        "application/vnd.oasis.opendocument.presentation" =
-          [ "libreoffice-impress.desktop" ];
+        "application/vnd.oasis.opendocument.text" = [ "libreoffice-writer.desktop" ];
+        "application/vnd.oasis.opendocument.spreadsheet" = [ "libreoffice-calc.desktop" ];
+        "application/vnd.oasis.opendocument.presentation" = [ "libreoffice-impress.desktop" ];
         "application/msword" = [ "libreoffice-writer.desktop" ];
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" =
-          [ "libreoffice-writer.desktop" ];
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" = [
+          "libreoffice-writer.desktop"
+        ];
         "application/vnd.ms-excel" = [ "libreoffice-calc.desktop" ];
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" =
-          [ "libreoffice-calc.desktop" ];
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = [
+          "libreoffice-calc.desktop"
+        ];
         "application/vnd.ms-powerpoint" = [ "libreoffice-impress.desktop" ];
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation" =
-          [ "libreoffice-impress.desktop" ];
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation" = [
+          "libreoffice-impress.desktop"
+        ];
         "application/rtf" = [ "libreoffice-writer.desktop" ];
         "text/csv" = [ "libreoffice-calc.desktop" ];
       };

@@ -1,0 +1,103 @@
+{ config, pkgs, ... }:
+
+{
+  hardware = {
+    cpu = "amd";
+    gpu = "nvidia";
+  };
+
+  disk = {
+    partitions = {
+      boot = "/dev/disk/by-uuid/12CE-A600";
+      storage = "/dev/disk/by-uuid/75f7fad7-0065-49a1-950c-ba5913eeae83";
+    };
+
+    encryption = {
+      enable = true;
+      decryptedRootDevice = "/dev/disk/by-uuid/ce341f6f-8daf-43d0-a034-901c93654118";
+    };
+  };
+
+  desktop = {
+    startupPrograms = [
+      "keepassxc"
+      config.nixtra.user.terminal
+      config.nixtra.user.browser
+    ];
+  };
+
+  kernel = {
+    type = "security";
+    supportAll = true;
+  };
+
+  security = {
+    kernel = {
+      aggressivePanic = false;
+      veryAggressivePanic = false;
+      mitigateCommonVulnerabilities = false;
+      enforceDmaProtection = false;
+      requireSignatures = false;
+      encryptMemory = false;
+    };
+
+    vpn = {
+      enable = true;
+      type = "mullvad";
+    };
+
+    sops = {
+      keys = {
+        "password" = {
+          neededForUsers = true;
+        };
+        "ssh/hosts/laptop/publicKey" = {
+          neededForUsers = true;
+        };
+        "searx/secret" = {
+          neededForUsers = true;
+        };
+        "miniflux/admin" = {
+          format = "dotenv";
+          sopsFile = ../../../secrets/miniflux.env;
+          restartUnits = [ "miniflux.service" ];
+        };
+      };
+    };
+
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 2121 ];
+    };
+
+    virtualization = true;
+  };
+
+  searx = {
+    secretPath = "searx/secret";
+  };
+
+  ai = {
+    comfyui = {
+      enable = true;
+    };
+  };
+
+  scheduledTasks = [
+    # {
+    #   enable = true;
+    #   name = "system-shutdown";
+    #   time = "23:00";
+    #   action = "shutdown now";
+    # }
+  ];
+
+  monitoring = {
+    enable = false;
+  };
+
+  debug = {
+    persistJournalLogs = true;
+    doVerboseKernelLogs = true;
+  };
+}

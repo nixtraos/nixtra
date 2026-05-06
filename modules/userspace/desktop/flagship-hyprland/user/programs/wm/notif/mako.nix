@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
@@ -22,13 +27,15 @@
         font = "monospace 14";
 
         # Play sound effect for notifications
-        on-notify = "exec vlc --gain 0.5 --vout none --intf dummy ${
-            ../../../../assets/audio/notification.mp3
-          }";
+        on-notify = "exec vlc --gain 0.5 --vout none --intf dummy ${../../../../assets/audio/notification.mp3}";
 
-        "urgency=low" = { border-color = "#cccccc"; };
+        "urgency=low" = {
+          border-color = "#cccccc";
+        };
 
-        "urgency=normal" = { border-color = "#d08770"; };
+        "urgency=normal" = {
+          border-color = "#d08770";
+        };
 
         "urgency=high" = {
           border-color = "#bf616a";

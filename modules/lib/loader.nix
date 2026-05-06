@@ -3,21 +3,34 @@
 # import function works for NixOS module,
 # but does not work for Home Manager modules.
 
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  evalModule = allArgs: raw:
+  evalModule =
+    allArgs: raw:
     if builtins.isFunction raw then
       raw allArgs
     else if builtins.isList raw then
-      lib.mkMerge (map (elem:
-        let m = if builtins.isFunction elem then elem allArgs else elem;
-        in if builtins.isAttrs m then m else { }) raw)
+      lib.mkMerge (
+        map (
+          elem:
+          let
+            m = if builtins.isFunction elem then elem allArgs else elem;
+          in
+          if builtins.isAttrs m then m else { }
+        ) raw
+      )
     else if builtins.isAttrs raw then
       raw
     else
       { };
-in rec {
+in
+rec {
   # The Nixtra module system provides this special
   # utility for conditional importing.
   #

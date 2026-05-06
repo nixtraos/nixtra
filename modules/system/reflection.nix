@@ -14,38 +14,37 @@
 # Reflection happens after the following processes finish:
 # preset integration, profile integration
 
-{ pkgs, nixtra, ... }:
+{
+  pkgs,
+  lib,
+  nixtra,
+  ...
+}:
 
-let
-  # SSH uses x11-ssh-askpass program for asking for passphrase,
-  # and it is set via SSH_ASKPASS variable. However, this is
-  # GUI-based, so if we want TTY, we have to create a pinentry
-  # wrapper that will work with SSH.
-  # https://bbs.archlinux.org/viewtopic.php?id=57500
-  askpass = pkgs.writeShellScriptBin "askpass" ''
-    #!/usr/bin/env bash
-
-    RESULT=$(pinentry-curses --ttytype=xterm-color --lc-ctype=en_AU.UTF8 --ttyname=/dev/tty <<END | egrep '^(D|ERR)'
-    SETDESC Enter your SSH password:
-    SETPROMPT
-    GETPIN
-    END)
-
-    if [ "$RESULT" == "ERR 111 canceled" ]; then
-        exit 255
-    else
-        echo ''${RESULT:2:''${#RESULT}-2}
-    fi
-
-    RESULT=
-
-    # required otherwise text becomes garbled
-    stty sane
-    # reset
-  '';
-in {
-  user.shell.environmentVariables = if nixtra.ssh.enable then {
-    SSH_ASKPASS = "${askpass}/bin/askpass";
-  } else
-    { };
+{
+  sudo.environmentVariablesToRetainForShell =
+    # General display environment
+    (
+      if nixtra.display.enable then
+        [
+          "DISPLAY"
+          "DBUS_SESSION_BUS_ADDRESS"
+        ]
+      else
+        [ ]
+    )
+    ++
+      # Environment variables that might be required for xorg
+      (if nixtra.display.enable && nixtra.display.server == "xorg" then [ "XAUTHORITY" ] else [ ])
+    ++
+      # Environment variables required for allowing root user to copy text to system clipboard with backends like wl-copy.
+      (
+        if nixtra.display.enable && nixtra.display.server == "wayland" then
+          [
+            "XDG_RUNTIME_DIR"
+            "WAYLAND_DISPLAY"
+          ]
+        else
+          [ ]
+      );
 }

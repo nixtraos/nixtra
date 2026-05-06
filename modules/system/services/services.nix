@@ -5,18 +5,12 @@
     # Core
     ./fhs-permission-checker.nix
 
-    # Proxy
-    ./tor.nix
-    ./microsocks.nix
-    ./i2p.nix
-
-    # Scheduling
-    ./tasks.nix
-
-    # Virtualization
-    ./virt.nix
-
-    ./nginx.nix
-    ./miniflux.nix
+    # Components
+    ./monitoring/monitoring.nix
+    ./proxy/proxy.nix
+    ./website/website.nix
+    ./scheduling/tasks.nix
+    ./virtualization/virtualization.nix
+    ./container/container.nix
   ];
 }

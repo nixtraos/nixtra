@@ -58,7 +58,9 @@ Nixtra is a fully-featured, hardened and extensible that focuses on anonymity, p
 - Patch out the weird quirks that come with using NixOS.
 - Make NixOS easier to use and customize.
 
-Why NixOS? Because impure system state should be volatile and the rest should be declarative and immutable. Or because of my security paranoia :p
+Why NixOS specifically? Because impure system state should be volatile and the rest should be declarative and immutable. Or because of my security paranoia :p
+
+Why Nixtra specifically? This project might be exactly what you need if you want to build a monolithic supercomputer home lab for running and accessing all of your services. Whether you want to run the full operating system as-is or take parts of its hardened configuration for programs, the choice is yours.
 
 ## Table of Contents
 
@@ -91,6 +93,7 @@ Some example security features (which can be toggled on or off) Nixtra employs a
 - [Tor browser uses a unique flavor-based system with separate Tor browsers.](./docs/01-usage.md##)
 - Incorporated into the kernel are strict configurations for kernel parameters, with a combination of various NixOS resources, including `nix-mineral`, the `hardening` nixpkgs profile, and other standard setups.
 - Most core systemd services are sandboxed.
+- Software components like upstream systemd are replaced with unrestricted equivalents to mitigate recent attempts of introducing (age) verification systems to Linux; systemd is replaced with libera-systemd.
 - All permitted insecure packages may only be used under a profile with no networking enabled.
 - `rm` is replaced with an alias of `trash` to prevent accidental permanent file deletion and many other aliases are included.
 - Critical and untrusted application-level programs are encapsulated by a firejail wrapper to sandbox them and restrict their scope and permissions.

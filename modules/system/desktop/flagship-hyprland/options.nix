@@ -11,16 +11,17 @@ let
       };
       timeout = lib.mkOption {
         type = lib.types.int;
-        description =
-          "The time (in seconds) that the app needs to be inactive for to be stopped";
+        description = "The time (in seconds) that the app needs to be inactive for to be stopped";
       };
     };
   };
-in {
+in
+{
   options.nixtra.desktop."flagship-hyprland" = {
     background = {
-      enable = nixtraLib.option.mkNixtraOption lib.types.bool false
-        "Whether to enable an animated background program.";
+      enable =
+        nixtraLib.option.mkNixtraOption lib.types.bool false
+          "Whether to enable an animated background program.";
       program = nixtraLib.option.mkNixtraOption lib.types.str "amdgpu_top" ''
         The program to use as an animated background.
         This should be set to the class of the desired program.
@@ -28,69 +29,104 @@ in {
       '';
     };
 
-    rainbowBorder = nixtraLib.option.mkNixtraOption lib.types.bool true
-      "Whether to enable a rainbow window border.";
-    rainbowShadow = nixtraLib.option.mkNixtraOption lib.types.bool true
-      "Whether to enable rainbow window shadows.";
+    rainbowBorder =
+      nixtraLib.option.mkNixtraOption lib.types.bool true
+        "Whether to enable a rainbow window border.";
+    rainbowShadow =
+      nixtraLib.option.mkNixtraOption lib.types.bool true
+        "Whether to enable rainbow window shadows.";
 
     workspaces = lib.mkOption {
-      type = lib.types.listOf (lib.types.submodule {
-        options = {
-          name = lib.mkOption {
-            type = lib.types.str;
-            description = "Workspace name";
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            name = lib.mkOption {
+              type = lib.types.str;
+              description = "Workspace name";
+            };
+            icon = lib.mkOption {
+              type = lib.types.str;
+              description = "The icon to use to display the workspace";
+            };
+            classes = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [ ];
+              description = "The names of program classes to reside in the workspace";
+            };
+            titles = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [ ];
+              description = "The names of program titles (initial titles) to reside in the workspace";
+            };
           };
-          icon = lib.mkOption {
-            type = lib.types.str;
-            description = "The icon to use to display the workspace";
-          };
-          programs = lib.mkOption {
-            type = lib.types.listOf lib.types.str;
-            description =
-              "The programs (their classes) to reside in the workspace";
-          };
-        };
-      });
+        }
+      );
       default = [
         {
           name = "Terminal";
           icon = "";
-          programs = [ "kitty" "alacritty" ];
+          classes = [
+            "kitty"
+            "alacritty"
+          ];
         }
         {
           name = "Clearnet Browser";
           icon = "";
-          programs = [ "firefox" "librewolf" "chrome" ];
+          classes = [
+            "firefox"
+            "librewolf"
+            "chrome"
+          ];
         }
         {
           name = "Video Player";
           icon = "";
-          programs = [ "FreeTube" "vlc" "mpv" "com.stremio.stremio" ];
+          classes = [
+            "FreeTube"
+            "vlc"
+            "mpv"
+            "com.stremio.stremio"
+          ];
+          titles = [ "FreeTube" ];
         }
         {
           name = "Anonymous Browser";
           icon = "";
-          programs = [ "Tor Browser" ];
+          classes = [ "Tor Browser" ];
         }
         {
           name = "Code Editor";
           icon = "";
-          programs = [ "lvim" "vim" "nvim" "codium" ];
+          classes = [
+            "lvim"
+            "vim"
+            "nvim"
+            "codium"
+            "neovide"
+          ];
         }
         {
           name = "Virtual Machine";
           icon = "";
-          programs = [ ".virt-manager-wrapped" "com.usebottles.bottles" ];
+          classes = [
+            ".virt-manager-wrapped"
+            "com.usebottles.bottles"
+          ];
         }
         {
           name = "Communication";
           icon = "";
-          programs = [ "element-desktop" "discord" "so.libdb.dissent" ];
+          classes = [
+            "element-desktop"
+            "discord"
+            "so.libdb.dissent"
+          ];
         }
         {
           name = "Gaming";
           icon = "";
-          programs = [
+          classes = [
             "org.prismlauncher.PrismLauncher"
             "org.prismlauncher.EntryPoint"
             "org.prismlauncher-EntryPoint"
@@ -102,7 +138,7 @@ in {
         {
           name = "Document Viewer";
           icon = "";
-          programs = [
+          classes = [
             "Zettlr"
             "io.github.alainm23.planify"
             "libreoffice-startcenter"
@@ -115,45 +151,61 @@ in {
         {
           name = "Drawing & Presentation";
           icon = "";
-          programs = [ "krita" "gimp" "org.oe-f." ];
+          classes = [
+            "krita"
+            "gimp"
+            "org.oe-f."
+
+          ];
+
+          titles = [
+            "Flowchart Maker & Online Diagram Software"
+          ];
         }
         {
           name = "Download";
           icon = "";
-          programs = [ "org.qbittorrent.qBittorrent" ];
+          classes = [ "org.qbittorrent.qBittorrent" ];
         }
         {
           name = "Email";
           icon = "";
-          programs = [ "thunderbird" ];
+          classes = [ "thunderbird" ];
         }
         {
           name = "Password Manager";
           icon = "";
-          programs = [ "org.keepassxc.KeePassXC" ];
+          classes = [ "org.keepassxc.KeePassXC" ];
         }
       ];
     };
 
     idleKiller = {
-      enable = mkNixtraOption lib.types.bool true
-        "Whether to enable Idle Killer; check for inactive apps and stop them automatically";
-      pollInterval = mkNixtraOption lib.types.int 5
-        "How often (in seconds) to poll focused app and update timers";
-      defaultTimeout = mkNixtraOption lib.types.int (30 * 60)
-        "Default timeout (in seconds) for apps not explicitly listed";
-      appTimeouts =
-        mkNixtraOption (lib.types.listOf idleKillerConcurrentAppSubmodule) [{
+      enable =
+        mkNixtraOption lib.types.bool true
+          "Whether to enable Idle Killer; check for inactive apps and stop them automatically";
+      pollInterval =
+        mkNixtraOption lib.types.int 5
+          "How often (in seconds) to poll focused app and update timers";
+      defaultTimeout = mkNixtraOption lib.types.int (
+        30 * 60
+      ) "Default timeout (in seconds) for apps not explicitly listed";
+      appTimeouts = mkNixtraOption (lib.types.listOf idleKillerConcurrentAppSubmodule) [
+        {
           class = "firefox";
           timeout = 600;
-        }]
-        "Apps that should be checked for inactivity concurrently; with a separate timer";
-      killMethod = mkNixtraOption (lib.types.enum [ "pid" "pkill" ]) "pid"
-        "The kill method that should be used to stop apps";
-      killGrace = mkNixtraOption lib.types.int 30
-        "How long to wait after SIGTERM before SIGKILL (in seconds)";
-      hyprctlBatch = mkNixtraOption lib.types.bool false
-        "Whether the service should optimize hyprctl calls per loop to avoid spamming compositor. The scripts already minimize hyprctl calls by caching results per loop, so this should not be needed.";
+        }
+      ] "Apps that should be checked for inactivity concurrently; with a separate timer";
+      killMethod = mkNixtraOption (lib.types.enum [
+        "pid"
+        "pkill"
+      ]) "pid" "The kill method that should be used to stop apps";
+      killGrace =
+        mkNixtraOption lib.types.int 30
+          "How long to wait after SIGTERM before SIGKILL (in seconds)";
+      hyprctlBatch =
+        mkNixtraOption lib.types.bool false
+          "Whether the service should optimize hyprctl calls per loop to avoid spamming compositor. The scripts already minimize hyprctl calls by caching results per loop, so this should not be needed.";
     };
   };
 }

@@ -1,9 +1,21 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
-  config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland"
-    && (config.nixtra.desktop.flagship-hyprland.rainbowBorder
-      || config.nixtra.desktop.flagship-hyprland.rainbowShadow)) {
+  config =
+    lib.mkIf
+      (
+        config.nixtra.user.desktop == "flagship-hyprland"
+        && (
+          config.nixtra.desktop.flagship-hyprland.rainbowBorder
+          || config.nixtra.desktop.flagship-hyprland.rainbowShadow
+        )
+      )
+      {
         systemd.user.services."rainbow-border" = {
           Unit = {
             Description = "Rainbow border animation for Hyprland";
@@ -55,16 +67,20 @@
 
                   # Apply to Hyprland
                   ${
-                    if config.nixtra.desktop.flagship-hyprland.rainbowBorder then ''
-                      hyprctl keyword general:col.active_border "$gradient" > /dev/null
-                    '' else
+                    if config.nixtra.desktop.flagship-hyprland.rainbowBorder then
+                      ''
+                        hyprctl keyword general:col.active_border "$gradient" > /dev/null
+                      ''
+                    else
                       ""
                   }
 
                   ${
-                    if config.nixtra.desktop.flagship-hyprland.rainbowShadow then ''
-                      hyprctl keyword decoration:shadow:color "''${colors[0]}" > /dev/null
-                    '' else
+                    if config.nixtra.desktop.flagship-hyprland.rainbowShadow then
+                      ''
+                        hyprctl keyword decoration:shadow:color "''${colors[0]}" > /dev/null
+                      ''
+                    else
                       ""
                   }
 
@@ -75,7 +91,9 @@
             Restart = "on-failure";
             RestartSec = 1;
           };
-          Install = { WantedBy = [ ]; };
+          Install = {
+            WantedBy = [ ];
+          };
         };
       };
 }

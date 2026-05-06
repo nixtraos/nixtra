@@ -1,9 +1,12 @@
 {
   description = " Your handy, infinite, brainstorming tool ";
 
-  outputs = { self, nixpkgs }: let
-    pkgs = nixpkgs.legacyPackages.x86_64-linux;
-  in {
-    packages.x86_64-linux.default = pkgs.libsForQt6.callPackage ./derivation.nix {};
-  };
+  outputs =
+    { self, nixpkgs }:
+    let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in
+    {
+      packages.x86_64-linux.default = pkgs.libsForQt6.callPackage ./derivation.nix { };
+    };
 }

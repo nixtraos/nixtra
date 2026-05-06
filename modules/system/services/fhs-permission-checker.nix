@@ -2,7 +2,9 @@
 
 {
   systemd.services.fhs-permission-checker = {
-    serviceConfig = { Type = "oneshot"; };
+    serviceConfig = {
+      Type = "oneshot";
+    };
     script = ''
       set -euo pipefail
 

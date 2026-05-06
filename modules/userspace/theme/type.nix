@@ -6,10 +6,12 @@
       enable = true;
       settings = {
         "org/gnome/desktop/interface" =
-          if config.nixtra.display.themeType == "dark" then {
-            color-scheme = "prefer-dark";
-            gtk-application-prefer-dark-theme = true;
-          } else
+          if config.nixtra.display.themeType == "dark" then
+            {
+              color-scheme = "prefer-dark";
+              gtk-application-prefer-dark-theme = true;
+            }
+          else
             { };
       };
     };

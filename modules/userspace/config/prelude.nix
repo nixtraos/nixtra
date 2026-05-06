@@ -7,7 +7,6 @@
     ./swayimg.nix
     ./gromit.nix
     ./lunarvim.nix
-    ./neovim.nix
     ./freetube.nix
   ];
 }

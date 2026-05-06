@@ -1,7 +1,11 @@
 { config, pkgs, ... }:
 
 {
-  performance = { useHugePages = true; };
+  performance = {
+    useHugePages = true;
+  };
 
-  system = { kernel = "gaming"; };
+  system = {
+    kernel = "gaming";
+  };
 }

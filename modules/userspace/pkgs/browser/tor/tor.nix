@@ -1,4 +1,9 @@
-{ nixtraLib, config, pkgs, ... }:
+{
+  nixtraLib,
+  config,
+  pkgs,
+  ...
+}:
 
 let
   tor-browser-clearnet = pkgs.tor-browser.override {
@@ -20,28 +25,26 @@ let
       lockPref("network.proxy.socks", "127.0.0.1")
       lockPref("network.proxy.socks_port", 1080)
       lockPref("extensions.torlauncher.start_tor", false)
-      lockPref("browser.startup.homepage", "file://${
-        ./web/pages/tor-browser-proxy-warning.html
-      }")
+      lockPref("browser.startup.homepage", "file://${./web/pages/tor-browser-proxy-warning.html}")
     '';
   };
 
   #tor-browser = pkgs.tor-browser.override { extraPrefs = ""; };
 
   # Create wrapper scripts
-  tor-browser-clearnet-wrapper =
-    pkgs.writeShellScriptBin "tor-browser-clearnet" ''
-      #export TOR_BROWSER_PROFILE_DIR="$HOME/.tor-browser-clearnet"
-      #exec ${tor-browser-clearnet}/bin/tor-browser --profile "$TOR_BROWSER_PROFILE_DIR" "$@"
-      exec ${tor-browser-clearnet}/bin/tor-browser "$@"
-    '';
+  tor-browser-clearnet-wrapper = pkgs.writeShellScriptBin "tor-browser-clearnet" ''
+    #export TOR_BROWSER_PROFILE_DIR="$HOME/.tor-browser-clearnet"
+    #exec ${tor-browser-clearnet}/bin/tor-browser --profile "$TOR_BROWSER_PROFILE_DIR" "$@"
+    exec ${tor-browser-clearnet}/bin/tor-browser "$@"
+  '';
 
   tor-browser-proxy-wrapper = pkgs.writeShellScriptBin "tor-browser-proxy" ''
     #export TOR_BROWSER_PROFILE_DIR="$HOME/.tor-browser-proxy"
     #exec ${tor-browser-proxy}/bin/tor-browser --profile "$TOR_BROWSER_PROFILE_DIR" "$@"
     exec ${tor-browser-proxy}/bin/tor-browser "$@"
   '';
-in {
+in
+{
   home.packages = with pkgs; [
     (nixtraLib.sandbox.wrapFirejail {
       executable = "${tor-browser-clearnet-wrapper}/bin/tor-browser-clearnet";

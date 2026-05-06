@@ -1,4 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
   imports = [ inputs.zeek-nix.nixosModules.zeek ];
@@ -11,7 +17,7 @@
       host = "localhost";
       package = pkgs.zeekWithPlugins {
         package = pkgs.zeek-latest;
-        plugins = [{ src = pkgs.zeek-sources.zeek-community-id; }];
+        plugins = [ { src = pkgs.zeek-sources.zeek-community-id; } ];
       };
 
       privateScripts = ''

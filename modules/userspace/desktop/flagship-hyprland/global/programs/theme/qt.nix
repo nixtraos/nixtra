@@ -1,9 +1,16 @@
 # https://discourse.nixos.org/t/guide-to-installing-qt-theme/35523/3
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
-let cfg = config.nixtra.desktop.theme.qt;
-in {
+let
+  cfg = config.nixtra.desktop.theme.qt;
+in
+{
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
     qt = {
       enable = true;

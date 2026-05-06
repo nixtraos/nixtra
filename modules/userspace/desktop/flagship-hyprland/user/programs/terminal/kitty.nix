@@ -9,7 +9,10 @@
       shellIntegration.mode = "no-sudo";
 
       settings = {
-        shell = config.nixtra.user.shell.backend;
+        # Since we use tmux, the real backend gets launched by that instead.
+        #shell = config.nixtra.user.shell;
+
+        shell = "tmux";
         background_opacity = 0.0;
         background_blur = 1;
         dynamic_background_opacity = true;
@@ -17,6 +20,7 @@
         scrollback_lines = 10000;
         enable_audio_bell = false;
         update_check_interval = 0;
+        cursor_trail = 3;
       };
 
       keybindings = {

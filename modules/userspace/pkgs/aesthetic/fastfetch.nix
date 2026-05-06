@@ -6,13 +6,11 @@ let
     format = "";
   };
 
-  totalLocWithNewlines =
-    "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | wc -l";
-  totalLocWithoutNewlines =
-    "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | grep -cve '^\\s*$'";
-  totalNewlinesLoc =
-    "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | grep -c '^\\s*$'";
-in {
+  totalLocWithNewlines = "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | wc -l";
+  totalLocWithoutNewlines = "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | grep -cve '^\\s*$'";
+  totalNewlinesLoc = "${pkgs.findutils}/bin/find /etc/nixos -name '*.nix' -type f -exec cat {} + | grep -c '^\\s*$'";
+in
+{
   programs.fastfetch = {
     enable = true;
 

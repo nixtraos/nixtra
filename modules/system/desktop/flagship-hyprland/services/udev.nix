@@ -1,11 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   notificationScript = pkgs.writeShellScriptBin "udev-usb-notification" ''
     export DISPLAY=:0
-    export XDG_RUNTIME_DIR="/run/user/${
-      builtins.toString config.nixtra.user.uid
-    }"
+    export XDG_RUNTIME_DIR="/run/user/${builtins.toString config.nixtra.user.uid}"
     export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
 
     VENDOR_ID="$ENV{ID_VENDOR_ID}"
@@ -24,7 +27,8 @@ let
       "USB Device Connected" \
       "<b>Product:</b> $PRODUCT_NAME\n<b>Vendor:</b> $VENDOR_NAME (ID: $VENDOR_ID)\n<b>Model:</b> $MODEL_NAME (ID: $MODEL_ID)\n<b>Serial:</b> $SERIAL_NUMBER"
   '';
-in {
+in
+{
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
     environment.systemPackages = with pkgs; [ notificationScript ];
 

@@ -17,8 +17,12 @@
     "privacy.popups.showBrowserMessage" = false;
     DisableAppUpdate = true;
     DisableTelemetry = true;
-    Notifications = { Blocked = [ "*" ]; };
-    PopupBlocking = { Enabled = true; };
+    Notifications = {
+      Blocked = [ "*" ];
+    };
+    PopupBlocking = {
+      Enabled = true;
+    };
     Permissions = {
       Camera = "block";
       Microphone = "block";
@@ -72,6 +76,9 @@
     exec = "firefox-chatgpt";
     icon = "firefox";
     terminal = false;
-    categories = [ "Network" "WebBrowser" ];
+    categories = [
+      "Network"
+      "WebBrowser"
+    ];
   };
 }

@@ -4,11 +4,11 @@
 { config, lib, ... }:
 
 {
-  allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg)
-    config.nixtra.security.permittedUnfreePackages;
-  permittedInsecurePackages = if !config.nixtra.security.networking then
-    config.nixtra.security.permittedInsecurePackages
-  else
-    [ ];
+  allowUnfreePredicate =
+    pkg: builtins.elem (lib.getName pkg) config.nixtra.security.permittedUnfreePackages;
+  permittedInsecurePackages =
+    if !config.nixtra.security.networking then
+      config.nixtra.security.permittedInsecurePackages
+    else
+      [ ];
 }

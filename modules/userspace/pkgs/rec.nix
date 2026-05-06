@@ -1,5 +1,9 @@
 { config, pkgs, ... }:
 
 {
-  home.packages = with pkgs; [ obs-studio flameshot grim ];
+  home.packages = with pkgs; [
+    obs-studio
+    flameshot
+    grim
+  ];
 }

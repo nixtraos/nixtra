@@ -1,0 +1,7 @@
+{ ... }:
+
+{
+  imports = [
+    ./comfyui.nix
+  ];
+}

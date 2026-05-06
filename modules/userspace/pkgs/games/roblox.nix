@@ -1,9 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  home.packages = with pkgs;
-    [
-      #sober
-      vinegar
-    ];
+  home.packages = with pkgs; [
+    #sober
+    vinegar
+  ];
 }

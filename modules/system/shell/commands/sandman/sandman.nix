@@ -1,7 +1,15 @@
-{ pkgs, lib, config, nixtraLib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  nixtraLib,
+  ...
+}:
 
-let inherit (nixtraLib.command) createCommand;
-in {
+let
+  inherit (nixtraLib.command) createCommand;
+in
+{
   config = lib.mkIf config.nixtra.shell.commands.enable {
     environment.systemPackages = [
       (pkgs.callPackage ./cli.nix { inherit pkgs createCommand; })

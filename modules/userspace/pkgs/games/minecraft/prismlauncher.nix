@@ -1,4 +1,10 @@
-{ config, lib, pkgs, nixtraLib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  nixtraLib,
+  ...
+}:
 
 {
   home.packages = [

@@ -1,5 +1,8 @@
-{ config, ... }:
+{ inputs, config, ... }:
 
+let
+  modulesPath = "${inputs.nixpkgs}/nixos/modules";
+in
 {
   imports = [
     # Kernel
@@ -13,6 +16,7 @@
     #./impermanence.nix
 
     # Core
+    ./hyperfagia.nix
     ./systemd.nix
     ./pam.nix
     ./permissions.nix
@@ -22,6 +26,11 @@
     ./close-on-suspend.nix
     ./suid.nix
     ./fhs.nix
+
+    # FIXME: https://github.com/NixOS/nixpkgs/issues/360616
+    #"${modulesPath}/profiles/hardened.nix" # NixOS security hardening
+    # FIXME: recursion error in latest
+    #"${inputs.nix-mineral}/nix-mineral.nix" # Complementary defaults for hardening for ones missed by security.nix and hardened.nix
 
     # Applications
     ./doas.nix

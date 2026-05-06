@@ -1,4 +1,10 @@
-{ nixtraLib, config, lib, pkgs, ... }:
+{
+  nixtraLib,
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {

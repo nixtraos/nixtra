@@ -1,10 +1,20 @@
 # https://github.com/AaronVerDow/nix/blob/main/common/apparmor/README.md
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
-let cfg = config.nixtra.security.apparmor;
-in {
-  imports = [ ./apparmor_d_module.nix ./commands/commands.nix ];
+let
+  cfg = config.nixtra.security.apparmor;
+in
+{
+  imports = [
+    ./apparmor_d_module.nix
+    ./commands/commands.nix
+  ];
 
   config = lib.mkIf cfg.enable {
     nixpkgs = {
@@ -32,11 +42,13 @@ in {
     # STRONGLY recommended
     specialisation = lib.mkIf cfg.rescueBootEntry {
       no-apparmor = {
-        configuration = { security.apparmor.enable = lib.mkForce false; };
+        configuration = {
+          security.apparmor.enable = lib.mkForce false;
+        };
       };
     };
 
-    # Other recommended settings, may be optional:  
+    # Other recommended settings, may be optional:
 
     # Adds aa-log, which is useful for debugging
     # May do other things in this context I'm not aware of

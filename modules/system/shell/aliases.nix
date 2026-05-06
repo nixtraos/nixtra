@@ -1,13 +1,21 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
-  torAliases = if config.nixtra.tor.aliases.enable then
-    lib.listToAttrs (map (program: {
-      name = builtins.baseNameOf program.program;
-      value = "torsocks ${program.program}";
-    }) (config.nixtra.tor.aliases.programs))
-  else
-    { };
+  torAliases =
+    if config.nixtra.tor.aliases.enable then
+      lib.listToAttrs (
+        map (program: {
+          name = builtins.baseNameOf program.program;
+          value = "torsocks ${program.program}";
+        }) (config.nixtra.tor.aliases.programs)
+      )
+    else
+      { };
 
   aliasCacheDir = "$HOME/.cache/aliases";
   aliases = config.nixtra.shell.aliases;
@@ -25,7 +33,8 @@ let
 
     $value "$@"
   '';
-in {
+in
+{
   imports = [ ../pkgs/cli/security.nix ];
 
   # environment.shellAliases = (builtins.mapAttrs (name: value: ''

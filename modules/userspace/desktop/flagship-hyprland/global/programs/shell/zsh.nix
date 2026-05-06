@@ -1,13 +1,25 @@
 # Modified version of: https://tesar.tech/blog/2024-10-21_nix_os_zsh_autocomplete
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
-    home.packages = with pkgs; [ oh-my-posh git ];
+    home.packages = with pkgs; [
+      oh-my-posh
+      git
+    ];
 
     programs.zsh = {
       enable = true;
+
+      # prevent yet another compinit being added to .zshrc
+      enableCompletion = false;
+
       plugins = [
         {
           name = "zsh-autocomplete"; # completes history, commands, etc.
@@ -33,6 +45,27 @@
         enable = true;
         plugins = [ "z" ];
         extraConfig = ''
+          # required so the cache check actually works
+          setopt EXTENDED_GLOB
+
+          # https://unix.stackexchange.com/a/30092
+          zstyle ':completion:*' list-prompt   '\'
+          zstyle ':completion:*' select-prompt '\'
+
+          # cache compinit for better performance
+          ZSH_COMPDUMP="$HOME/.zcompdump"
+          autoload -Uz compinit
+          if [[ -n "$ZSH_COMPDUMP(#qN.m-1)" ]]; then
+            compinit -C -d "$ZSH_COMPDUMP"
+          else
+            compinit -d "$ZSH_COMPDUMP"
+          fi
+
+          # 3. Compile the dump file to bytecode (makes it nearly instant to read)
+          if [[ -s "$ZSH_COMPDUMP" && (! -s "$ZSH_COMPDUMP.zwc" || "$ZSH_COMPDUMP" -nt "$ZSH_COMPDUMP.zwc") ]]; then
+            zcompile "$ZSH_COMPDUMP"
+          fi
+
           # Required for autocomplete with box: https://unix.stackexchange.com/a/778868
           zstyle ':completion:*' completer _expand _complete _ignored _approximate _expand_alias
           zstyle ':autocomplete:*' default-context curcontext
@@ -40,8 +73,11 @@
 
           setopt HIST_FIND_NO_DUPS
 
-          autoload -Uz compinit
-          compinit
+          # already done by oh-my-zsh
+          # autoload -Uz compinit
+          # compinit
+
+
 
           setopt autocd  # cd without writing 'cd'
           setopt globdots # show dotfiles in autocomplete list
@@ -50,18 +86,20 @@
 
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
-      history = { size = 10000; };
+      history = {
+        size = 10000;
+      };
 
       # Extra configurations for Zsh
       initContent = ''
-        # Oh-My-Posh initialization for Zsh
-        eval "$(oh-my-posh init zsh --config /home/user/.config/zsh/shell.omp.json)"
-
         # zsh-autocomplete
         bindkey -M menuselect '^M' .accept-line # run code when selected completion
 
         # Vi mode with Esc
         #bindkey -v
+
+        # Oh-My-Posh initialization for Zsh
+        eval "$(oh-my-posh init zsh --config /home/user/.config/zsh/shell.omp.json)"
       '';
     };
 

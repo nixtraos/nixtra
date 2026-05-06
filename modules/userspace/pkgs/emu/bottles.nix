@@ -1,7 +1,10 @@
 { pkgs, nixtraLib, ... }:
 
-let bottles = pkgs.bottles.override { removeWarningPopup = true; };
-in {
+let
+  bottles = pkgs.bottles;
+  #bottles = pkgs.bottles.override { removeWarningPopup = true; };
+in
+{
   home.packages = [
     (nixtraLib.sandbox.wrapFirejail {
       executable = "${bottles}/bin/bottles";

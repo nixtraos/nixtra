@@ -1,46 +1,70 @@
-{ profileSettings, config, lib, pkgs, modulesPath, ... }:
+{
+  profileSettings,
+  config,
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
 
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
-  hardware = lib.mkIf config.nixtra.kernel.enableNonfreeFirmware {
-    firmware = [ pkgs.linux-firmware ];
-    enableRedistributableFirmware = true;
-  };
+  hardware = lib.mkMerge [
+    {
+      enableAllFirmware = config.nixtra.kernel.supportAll;
+      enableAllHardware = config.nixtra.kernel.supportAll;
+    }
+
+    (lib.mkIf config.nixtra.kernel.enableNonfreeFirmware {
+      firmware = [ pkgs.linux-firmware ];
+      enableRedistributableFirmware = true;
+    })
+  ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.initrd.availableKernelModules =
-    [ "nvme" "xhci_pci" "ahci" "usbhid" "sd_mod" ];
+  boot.initrd.availableKernelModules = [
+    "nvme"
+    "xhci_pci"
+    "ahci"
+    "usbhid"
+    "sd_mod"
+  ];
   boot.initrd.kernelModules = [ ];
   boot.kernelPackages = lib.mkMerge [
-    (lib.mkIf (config.nixtra.system.kernel == "security")
-      pkgs.linuxKernel.packages.linux_hardened)
-    (lib.mkIf (config.nixtra.system.kernel == "gaming")
-      pkgs.linuxKernel.packages.linux_zen)
+    (lib.mkIf (config.nixtra.kernel.type == "custom") config.nixtra.kernel.customKernel)
+    (lib.mkIf (config.nixtra.kernel.type == "security") pkgs.linuxKernel.packages.linux_hardened)
+    (lib.mkIf (config.nixtra.kernel.type == "gaming") pkgs.linuxKernel.packages.linux_zen)
   ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = config.nixtra.kernel.extraPackages;
   boot.initrd.supportedFilesystems = config.nixtra.system.supportedFilesystems;
 
   # Fix bwrap exec error on Flatpak
-  boot.kernel.sysctl = { "kernel.unprivileged_userns_clone" = 1; };
+  boot.kernel.sysctl = {
+    "kernel.unprivileged_userns_clone" = 1;
+  };
 
   # Full Disk Encryption
-  boot.initrd.luks = if config.nixtra.disk.encryption.enable then {
-    devices.cryptroot = {
-      device = config.nixtra.disk.partitions.storage;
-      allowDiscards = true;
-      preLVM = true;
-    };
-  } else
-    { };
+  boot.initrd.luks =
+    if config.nixtra.disk.encryption.enable then
+      {
+        devices.cryptroot = {
+          device = config.nixtra.disk.partitions.storage;
+          allowDiscards = true;
+          preLVM = true;
+        };
+      }
+    else
+      { };
 
   fileSystems."/" = {
-    device = if config.nixtra.disk.encryption.enable then
-      config.nixtra.disk.encryption.decryptedRootDevice
-    else
-      config.nixtra.disk.partitions.storage;
+    device =
+      if config.nixtra.disk.encryption.enable then
+        config.nixtra.disk.encryption.decryptedRootDevice
+      else
+        config.nixtra.disk.partitions.storage;
 
     fsType = config.nixtra.system.filesystem;
   };
@@ -48,7 +72,10 @@
   fileSystems."/boot" = {
     device = config.nixtra.disk.partitions.boot;
     fsType = "vfat";
-    options = [ "fmask=0022" "dmask=0022" ];
+    options = [
+      "fmask=0022"
+      "dmask=0022"
+    ];
   };
 
   swapDevices = [ ];

@@ -1,7 +1,12 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
-  config = lib.mkIf (config.nixtra.user.shell.backend == "zsh") {
+  config = lib.mkIf (config.nixtra.user.shell == "zsh") {
     environment.systemPackages = with pkgs; [ direnv ];
 
     programs.zsh = {
@@ -12,14 +17,22 @@
 
       ohMyZsh = {
         enable = true;
-        plugins =
-          [ "git" "copyfile" "copybuffer" "dirhistory" "history" "direnv" ];
+        plugins = [
+          "git"
+          "copyfile"
+          "copybuffer"
+          "dirhistory"
+          "history"
+          "direnv"
+        ];
         theme = "robbyrussell";
       };
 
-      shellInit = lib.concatStringsSep "\n"
-        (lib.mapAttrsToList (name: value: ''export ${name}="${value}"'')
-          config.nixtra.user.shell.environmentVariables);
+      shellInit = lib.concatStringsSep "\n" (
+        lib.mapAttrsToList (
+          name: value: ''export ${name}="${value}"''
+        ) config.nixtra.shell.environmentVariables
+      );
 
       interactiveShellInit = lib.mkOrder 1500 ''
         if command -v nix-your-shell > /dev/null; then
@@ -27,7 +40,10 @@
         fi
       '';
 
-      autosuggestions.strategy = [ "completion" "history" ];
+      autosuggestions.strategy = [
+        "completion"
+        "history"
+      ];
     };
   };
 }

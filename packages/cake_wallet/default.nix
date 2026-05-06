@@ -6,11 +6,46 @@
   fetchgit,
   fetchFromGitHub,
   which, # CLI utils
-  cmake, ninja, autoconf, automake, ccache, xcbuild, # Build
-  gcc, clang, rustc, cargo-ndk, go, llvm_21, dart, flutter, # Language
-  git, curl, # Network
-  glib, pkg-config, util-linux, libselinux, mount, udisks2, pcre, pcre2, libsysprof-capture, libtool, gperf, gtk3, expat, unzip, libsepol, gobject-introspection, libthai, libdatrie, xorg, lerc, libxkbcommon, libepoxy, # Library
-  androidenv, sdkmanager, # Android SDK
+  cmake,
+  ninja,
+  autoconf,
+  automake,
+  ccache,
+  xcbuild, # Build
+  gcc,
+  clang,
+  rustc,
+  cargo-ndk,
+  go,
+  llvm_21,
+  dart,
+  flutter, # Language
+  git,
+  curl, # Network
+  glib,
+  pkg-config,
+  util-linux,
+  libselinux,
+  mount,
+  udisks2,
+  pcre,
+  pcre2,
+  libsysprof-capture,
+  libtool,
+  gperf,
+  gtk3,
+  expat,
+  unzip,
+  libsepol,
+  gobject-introspection,
+  libthai,
+  libdatrie,
+  xorg,
+  lerc,
+  libxkbcommon,
+  libepoxy, # Library
+  androidenv,
+  sdkmanager, # Android SDK
   cacert,
   dbus,
   ...
@@ -23,17 +58,18 @@ let
       url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${flutterVersion}-stable.tar.xz";
       sha256 = "sha256-+4zjD9Idj0PNJUCvbZ+UUsv8gKhXBvJssHI4b8Ufv84="; # use `nix-prefetch-url --unpack` to get this
     };
-    dartHash     = lib.fakeSha256; # fetch from Dart release notes
+    dartHash = lib.fakeSha256; # fetch from Dart release notes
     engineVersion = "55eae6864b296dd9f43b2cc7577ec256e5c32a8d";
   });
   aenv = androidenv.override { licenseAccepted = true; };
   comp = aenv.composeAndroidPackages {
     platformVersions = [ "35" ];
-    abiVersions      = [ "arm64-v8a" ];
-    extraLicenses    = [ ];  # if you need extra ones
+    abiVersions = [ "arm64-v8a" ];
+    extraLicenses = [ ]; # if you need extra ones
   };
   androidsdk = comp.androidsdk;
-in stdenv.mkDerivation rec {
+in
+stdenv.mkDerivation rec {
   pname = "cake_wallet";
   version = "5.1.2";
 
@@ -72,8 +108,54 @@ in stdenv.mkDerivation rec {
   #];
 
   cxx = clang;
-  nativeBuildInputs = [ cmake ninja autoconf automake ccache gcc rustc cargo-ndk go flutter llvm_21 dart git curl glib pkg-config util-linux libselinux mount udisks2 pcre pcre2 libsysprof-capture libtool gperf gtk3 expat unzip libsepol gobject-introspection libthai libdatrie xorg.libXdmcp xorg.libXtst lerc libxkbcommon libepoxy androidsdk sdkmanager cacert xcbuild ];
-  buildInputs = [ gtk3 pkg-config dbus ];
+  nativeBuildInputs = [
+    cmake
+    ninja
+    autoconf
+    automake
+    ccache
+    gcc
+    rustc
+    cargo-ndk
+    go
+    flutter
+    llvm_21
+    dart
+    git
+    curl
+    glib
+    pkg-config
+    util-linux
+    libselinux
+    mount
+    udisks2
+    pcre
+    pcre2
+    libsysprof-capture
+    libtool
+    gperf
+    gtk3
+    expat
+    unzip
+    libsepol
+    gobject-introspection
+    libthai
+    libdatrie
+    xorg.libXdmcp
+    xorg.libXtst
+    lerc
+    libxkbcommon
+    libepoxy
+    androidsdk
+    sdkmanager
+    cacert
+    xcbuild
+  ];
+  buildInputs = [
+    gtk3
+    pkg-config
+    dbus
+  ];
 
   inherit dbus;
 
@@ -146,8 +228,7 @@ in stdenv.mkDerivation rec {
     runHook postBuild
   '';
 
-  preInstall = ''
-  '';
+  preInstall = "";
 
   installPhase = ''
     runHook preInstall

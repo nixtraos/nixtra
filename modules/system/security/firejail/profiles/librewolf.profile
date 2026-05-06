@@ -21,4 +21,4 @@ whitelist ${HOME}/.config/pulse
 whitelist ${HOME}/.local/share/themes
 
 private-bin firefox,firefox-esr,which,sh,env,bash
-private-etc hosts,passwd,mime.types,fonts,mailcap,firefox,xdg,gtk-3.0,X11,pulse,alternatives,localtime,nsswitch.conf,resolv.conf
+private-etc hosts,passwd,mime.types,fonts,mailcap,firefox,xdg,gtk-3.0,X11,pulse,alternatives,localtime,nsswitch.conf,resolv.conf,ssl,pki,static

@@ -1,5 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  home.packages = with pkgs; [ pcmanfm nordic ];
+  home.packages = with pkgs; [
+    pcmanfm
+    nordic
+  ];
 }

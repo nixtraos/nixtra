@@ -2,8 +2,12 @@
 
 {
   programs.swayimg.settings = {
-    viewer = { transparency = "#00000000"; };
+    viewer = {
+      transparency = "#00000000";
+    };
 
-    "keys.viewer" = { "Shift+r" = "rand_file"; };
+    "keys.viewer" = {
+      "Shift+r" = "rand_file";
+    };
   };
 }

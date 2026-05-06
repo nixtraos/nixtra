@@ -30,11 +30,13 @@
       };
       nat = {
         internalInterfaces = [ "tornet " ];
-        forwardPorts = [{
-          destination = "127.0.0.1:5353";
-          proto = "udp";
-          sourcePort = 53;
-        }];
+        forwardPorts = [
+          {
+            destination = "127.0.0.1:5353";
+            proto = "udp";
+            sourcePort = 53;
+          }
+        ];
       };
       firewall = {
         enable = true;
@@ -58,6 +60,8 @@
       };
     };
 
-    boot.kernel.sysctl = { "net.ipv4.conf.tornet.route_localnet" = 1; };
+    boot.kernel.sysctl = {
+      "net.ipv4.conf.tornet.route_localnet" = 1;
+    };
   };
 }

@@ -68,7 +68,8 @@
         port = 8888;
         bind_address = "127.0.0.1";
         secret_key = config.sops.secrets.${config.nixtra.searx.secretPath}.path;
-        limiter = true;
+        # https://old.reddit.com/r/Searx/comments/vys2oz/searxng_always_returns_an_error_page_saying_too/
+        limiter = false;
         public_instance = true;
         image_proxy = true;
         method = "GET";

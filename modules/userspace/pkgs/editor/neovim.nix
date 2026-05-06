@@ -1,5 +1,10 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
-  programs.neovim.enable = true;
+  programs.neovim.enable = lib.mkIf (!config.programs.nixvim.enable) true;
 }

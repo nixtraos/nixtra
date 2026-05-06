@@ -3,7 +3,7 @@
 {
   imports = [
     ../pkgs/games/lutris.nix
-    ../pkgs/games/minecraft/prismlauncher.nix
+    #../pkgs/games/minecraft/prismlauncher.nix
     #../pkgs/games/roblox.nix
     #../pkgs/emu/cemu.nix
     ../pkgs/emu/ryujinx.nix

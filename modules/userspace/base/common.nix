@@ -1,4 +1,11 @@
-{ osConfig, nixtraLib, lib, config, pkgs, ... }:
+{
+  osConfig,
+  nixtraLib,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -11,7 +18,10 @@
     home.sessionVariables = {
       EDITOR = config.nixtra.user.editor;
       TERMINAL = config.nixtra.user.terminal;
-    };
+    }
+    // config.nixtra.shell.environmentVariables;
+
+    systemd.user.sessionVariables = config.nixtra.shell.environmentVariables;
 
     # Enable automatic management of directories specified in the XDG specification
     # https://xdgbasedirectoryspecification.com/

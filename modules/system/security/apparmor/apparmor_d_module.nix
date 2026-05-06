@@ -1,16 +1,35 @@
-{ pkgs, config, lib, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 let
   inherit (lib)
-    mkIf mapAttrs assertMsg pathIsRegularFile mkEnableOption mkOption types;
+    mkIf
+    mapAttrs
+    assertMsg
+    pathIsRegularFile
+    mkEnableOption
+    mkOption
+    types
+    ;
 
   cfg = config.security.apparmor_d;
   inherit (pkgs) apparmor-d;
-in {
+in
+{
   options.security.apparmor_d = with lib; {
     enable = mkEnableOption "enable apparmor.d support";
 
     profiles = mkOption {
-      type = types.attrsOf (types.enum [ "disable" "complain" "enforce" ]);
+      type = types.attrsOf (
+        types.enum [
+          "disable"
+          "complain"
+          "enforce"
+        ]
+      );
       default = { };
       description = "set of apparmor profiles to include from apparmor.d";
     };
@@ -20,10 +39,12 @@ in {
     security.apparmor.packages = [ apparmor-d ];
     security.apparmor.policies = mapAttrs (name: state: {
       inherit state;
-      path = let file = "${apparmor-d}/etc/apparmor.d/${name}";
-      in assert assertMsg (pathIsRegularFile file)
-        "profile ${name} not found in apparmor.d path (${file})";
-      file;
+      path =
+        let
+          file = "${apparmor-d}/etc/apparmor.d/${name}";
+        in
+        assert assertMsg (pathIsRegularFile file) "profile ${name} not found in apparmor.d path (${file})";
+        file;
     }) cfg.profiles;
 
     security.apparmor.includes."tunables/global.d/store" = ''

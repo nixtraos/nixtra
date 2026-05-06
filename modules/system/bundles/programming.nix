@@ -13,6 +13,8 @@
     ../pkgs/file/gparted.nix
     ../pkgs/file/thunar.nix
     ../pkgs/proxy/torsocks.nix
+    ../pkgs/virt/podman.nix
+    ../pkgs/nix/devenv.nix
 
     # Services
     ../services/ollama.nix

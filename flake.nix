@@ -5,6 +5,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-lib.url = "github:nix-community/nixpkgs.lib";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-hyperfagia.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-unstable-hyperfagia.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    nixpkgs-lvm.url = "github:nixos/nixpkgs/2fbfb1d73d239d2402a8fe03963e37aab15abe8b";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
@@ -56,12 +60,20 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Generating Nix derivations for various languages smoothly
+    dream2nix = {
+      url = "github:nix-community/dream2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # zeek-nix = {
     #   url = "github:hardenedlinux/zeek-nix/main";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
 
-    systems = { url = "github:nix-systems/default"; };
+    systems = {
+      url = "github:nix-systems/default";
+    };
 
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
@@ -73,31 +85,55 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    wayscriber.url = "github:devmobasa/wayscriber";
+    # Declarative NeoVim
+    nixvim = {
+      url = "github:nix-community/nixvim/nixos-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    comfyui.url = "github:utensils/comfyui-nix";
+
+    # wayscriber.url = "github:devmobasa/wayscriber";
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
-    , sops-nix, lanzaboote, disko, nixos-generators, systems, git-hooks, nix-ld
-    , ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      nixpkgs-unstable,
+      flake-parts,
+      home-manager,
+      sops-nix,
+      lanzaboote,
+      disko,
+      nixos-generators,
+      systems,
+      git-hooks,
+      nix-ld,
+      nixpkgs-lvm,
+      dream2nix,
+      ...
+    }:
     let
       hostSettings = import ./settings.nix;
-      hostProfileSettings =
-        import (./profiles + ("/" + hostSettings.profile) + "/settings.nix");
-      hostName = if hostProfileSettings.useHostnameProfilePrefix then
-        "${hostProfileSettings.hostname}-${hostSettings.profile}"
-      else
-        hostProfileSettings.hostname;
+      hostProfileSettings = import (./profiles + ("/" + hostSettings.profile) + "/settings.nix");
+      hostName =
+        if hostProfileSettings.useHostnameProfilePrefix then
+          "${hostProfileSettings.hostname}-${builtins.replaceStrings [ "/" ] [ "-" ] hostSettings.profile}"
+        else
+          hostProfileSettings.hostname;
 
-      otherProfiles = builtins.filter (profile: profile != hostSettings.profile)
-        (builtins.attrNames (builtins.readDir ./profiles));
+      otherProfiles = builtins.filter (profile: profile != hostSettings.profile) (
+        builtins.attrNames (builtins.readDir ./profiles)
+      );
 
-      mkNixtraSystem = profile:
+      mkNixtraSystem =
+        profile:
         let
-          profileSettings =
-            import (./profiles + ("/" + profile) + "/settings.nix");
-          unstableNixpkgsConfig =
-            import ./modules/system/unstable-configuration.nix;
-        in nixpkgs.lib.nixosSystem {
+          profileSettings = import (./profiles + ("/" + profile) + "/settings.nix");
+          unstableNixpkgsConfig = import ./modules/system/unstable-configuration.nix;
+        in
+        nixpkgs.lib.nixosSystem {
           system = profileSettings.arch;
           modules = [
             ./modules/system/configuration.nix
@@ -108,99 +144,121 @@
             #impermanence.nixosModules.impermanence
           ];
           specialArgs = {
-            settings = { inherit profile; };
+            settings = hostSettings;
             inherit profileSettings;
+            inherit hostName;
             inherit inputs;
-            unstable-pkgs =
-              nixpkgs-unstable.legacyPackages.${profileSettings.arch};
+            unstable-pkgs = nixpkgs-unstable.legacyPackages.${profileSettings.arch};
+
+            # TEMP (FIXME)
+            lvm-pkgs = nixpkgs-lvm.legacyPackages.${profileSettings.arch};
           };
         };
 
       forEachSystem = nixpkgs.lib.genAttrs (import systems);
-    in flake-parts.lib.mkFlake { inherit inputs; } {
+    in
+    flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [ ];
 
-      systems = [ ];
+      systems = import systems;
 
-      # perSystem = { config, pkgs, system, ... }:
-      #   let
-      # pkgsWithZeek = import inputs.nixpkgs {
-      #   inherit system;
-      #   overlays =
-      #     (inputs.zeek-nix.overlays or [ inputs.zeek-nix.overlay ]);
-      # };
-      # in {
-      #   packages = {
-      #zeek = inputs.zeek-nix.packages.${system}.zeek-latest;
+      perSystem =
+        {
+          config,
+          self',
+          inputs',
+          pkgs,
+          system,
+          ...
+        }:
 
-      # optional: expose helper that builds zeek with plugins using zeek-nix's lib
-      # zeek-with-plugins = inputs.zeek-nix.lib.zeekWithPlugins {
-      #   package = inputs.zeek-nix.packages.${system}.zeek-latest;
-      #   plugins = [
-      #     # example: inputs.zeek-nix.lib.nixpkgs.zeek-sources.<plugin>
-      #   ];
-      # };
-      # };
-      # };
-
-      flake.nixosModules = {
-        checks = forEachSystem (system:
-          let pkgs = nixpkgs.legacyPackages.${system};
-          in {
-            pre-commit-check = git-hooks.lib.${system}.run {
-              src = ./.;
-              hooks = { nixfmt-rfc-style.enable = true; };
+        {
+          devShells.default = pkgs.mkShell { packages = [ pkgs.bashInteractive ]; };
+          checks.pre-commit-check = git-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              nixfmt-rfc-style.enable = true;
             };
-          });
+          };
 
-        formatter = forEachSystem (system:
-          let
-            pkgs = nixpkgs.legacyPackages.${system};
-            config = self.checks.${system}.pre-commit-check.config;
-            inherit (config) package configFile;
-            script = ''
-              ${pkgs.lib.getExe package} run --all-files --config ${configFile}
-            '';
-          in pkgs.writeShellScriptBin "pre-commit-run" script);
+          formatter =
+            let
+              hookConfig = config.checks.pre-commit-check.config;
+              inherit (hookConfig) package configFile;
+              script = ''
+                ${pkgs.lib.getExe package} run --all-files --config ${configFile}
+              '';
+            in
+            pkgs.writeShellScriptBin "pre-commit-run" script;
 
+          apps.create-iso = {
+            type = "app";
+            program =
+              let
+                buildScript = pkgs.writeShellScriptBin "build-iso" ''
+                  set -e
+                  echo "Building NixOS ISO..."
+
+                  ${pkgs.nix}/bin/nix build .#nixosConfigurations."${hostName}-installer".config.system.build.isoImage
+
+                  echo "Copying generated ISO to current directory..."
+
+                  cp result/iso/*.iso ./nixtra-installer.iso
+                  chmod +w ./nixtra-installer.iso
+
+                  echo "Done! Generated: ./nixtra-installer.iso"
+                '';
+              in
+              "${buildScript}/bin/build-iso";
+          };
+        };
+
+      flake = {
+        nixosConfigurations = {
+          ${hostName} = mkNixtraSystem hostSettings.profile;
+
+          "${hostName}-installer" = nixpkgs.lib.nixosSystem {
+            system = hostProfileSettings.arch;
+            modules = [
+              "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+
+              # add any extra packages and an install script into the ISO
+              (
+                { pkgs, ... }:
+                {
+                  environment.systemPackages = [
+                    (pkgs.writeScriptBin "nixtra-install" (builtins.readFile ./net/install.sh))
+                    pkgs.bash
+                    pkgs.systemd
+                    pkgs.coreutils
+                    pkgs.git
+                    pkgs.e2fsprogs
+                    pkgs.util-linux
+                    pkgs.parted
+                    pkgs.gnused
+                    pkgs.btrfs-progs
+                    pkgs.zfs
+                    pkgs.cryptsetup
+                  ];
+                }
+              )
+            ];
+
+            specialArgs = {
+              settings = hostSettings;
+              inherit hostProfileSettings hostName inputs;
+              unstable-pkgs = nixpkgs-unstable.legacyPackages.${hostProfileSettings.arch};
+              lvm-pkgs = nixpkgs-lvm.legacyPackages.${hostProfileSettings.arch};
+            };
+          };
+        }
+        // builtins.listToAttrs (
+          map (profile: {
+            name = "profile-${profile}";
+            value = mkNixtraSystem profile;
+          }) otherProfiles
+        );
       };
-
-      flake.nixosConfigurations = {
-        ${hostName} = mkNixtraSystem hostSettings.profile;
-
-        # nix build .#nixosConfigurations.iso.config.system.build.images.iso
-        #iso = nixpkgs.lib.nixosSystem {
-        #  system = hostProfileSettings.arch;
-        #  modules = [
-        #    #(nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-        #    ({ pkgs, modulesPath, ... }: {
-        #      imports = [
-        #        (modulesPath + "/installer/cd‑dvd/installation‑cd‑minimal.nix")
-        #      ];
-        #      environment.systemPackages = [ pkgs.neovim ];
-        #    })
-        #  ];
-        #};
-        #specialIso = nixos-generators.nixosGenerate {
-        #  system = "x86_64-linux";
-        #  # "formats" refer to different types of output images such as ISOs, VM disk images, raw disk images, and more that NixOS can produce from a single configuration.
-        #  format = "install-iso";
-        #  modules = [
-        #    #"${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-        #    #./iso.nix
-        #    ({ pkgs, modulesPath, ... }: {
-        #      imports = [
-        #        (modulesPath + "/installer/cd‑dvd/installation‑cd‑minimal.nix")
-        #      ];
-        #      environment.systemPackages = [ pkgs.neovim ];
-        #    })
-        #  ];
-        #  specialArgs = { inherit inputs; };
-        #};
-      } // builtins.listToAttrs (map (profile: {
-        name = "profile-${profile}";
-        value = mkNixtraSystem profile;
-      }) otherProfiles);
     };
 
   nixConfig = {

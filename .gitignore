@@ -18,4 +18,4 @@ result-*/
 **/*.bak
 
 # Zsh residue
-**/core
+#**/core

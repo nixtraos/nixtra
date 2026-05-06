@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
@@ -47,13 +52,11 @@
     # https://discourse.nixos.org/t/setting-nautiilus-gtk-theme/38958/7
     xdg.configFile = {
       "gtk-3.0" = {
-        source =
-          "${config.gtk.theme.package}/share/themes/${config.gtk.theme.name}/gtk-3.0";
+        source = "${config.gtk.theme.package}/share/themes/${config.gtk.theme.name}/gtk-3.0";
         recursive = true;
       };
       "gtk-4.0" = {
-        source =
-          "${config.gtk.theme.package}/share/themes/${config.gtk.theme.name}/gtk-4.0";
+        source = "${config.gtk.theme.package}/share/themes/${config.gtk.theme.name}/gtk-4.0";
         recursive = true;
       };
     };

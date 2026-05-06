@@ -1,4 +1,12 @@
-{ config, profileSettings, pkgs, lib, nixtraLib, inputs, ... }:
+{
+  config,
+  profileSettings,
+  pkgs,
+  lib,
+  nixtraLib,
+  inputs,
+  ...
+}:
 
 # TODO: add violentmonkey scripts
 # https://codeberg.org/Amm0ni4/bypass-all-shortlinks-debloated
@@ -7,28 +15,37 @@
 let
   extensionSettingsCommands = {
     new_temporary_container_tab = {
-      precedenceList = [{
-        id = "{c607c8df-14a7-4f28-894f-29e8722976af}";
-        installDate = 1000;
-        value = { shortcut = "Ctrl+T"; };
-        enabled = true;
-      }];
+      precedenceList = [
+        {
+          id = "{c607c8df-14a7-4f28-894f-29e8722976af}";
+          installDate = 1000;
+          value = {
+            shortcut = "Ctrl+T";
+          };
+          enabled = true;
+        }
+      ];
     };
 
     new_temporary_container_tab_current_url = {
-      precedenceList = [{
-        id = "{c607c8df-14a7-4f28-894f-29e8722976af}";
-        installDate = 1000;
-        value = { shortcut = "Ctrl+R"; };
-        enabled = true;
-      }];
+      precedenceList = [
+        {
+          id = "{c607c8df-14a7-4f28-894f-29e8722976af}";
+          installDate = 1000;
+          value = {
+            shortcut = "Ctrl+R";
+          };
+          enabled = true;
+        }
+      ];
     };
   };
 
   profileName = "default";
 
   userChrome = import ./theme2/userChrome.nix { inherit config lib; };
-in {
+in
+{
   imports = [ ];
 
   programs.librewolf = {
@@ -46,14 +63,16 @@ in {
         settings = {
           "image.animation_mode" = "once"; # better perf
 
+          # optimization for dark reader extension
+          # https://old.reddit.com/r/firefox/comments/o0xl1q/reducing_cpu_usage_of_dark_reader_extension
+          "nglayout.initialpaint.delay" = 2000;
+
           "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-          "browser.sessionstore.max_resumed_crashes" =
-            0; # Disable Session Restore feature
+          "browser.sessionstore.max_resumed_crashes" = 0; # Disable Session Restore feature
           "browser.sessionhistory.max_entries" = 10;
           "browser.sessionstore.debug.no_auto_updates" = true;
           "browser.sessionstore.disable_platform_collection" = true;
-          "cookiebanners.service.mode.privateBrowsing" =
-            2; # Block cookie banners in private browsing
+          "cookiebanners.service.mode.privateBrowsing" = 2; # Block cookie banners in private browsing
           "cookiebanners.service.mode" = 2; # Block cookie banners
           "privacy.donottrackheader.enabled" = true;
           "privacy.fingerprintingProtection" = true;
@@ -76,8 +95,7 @@ in {
           "services.sync.prefs.sync.media.autoplay.default" = false;
           "messaging-system.rsexperimentloader.enabled" = false;
           "browser.translations.automaticallyPopup" = false;
-          "browser.newtabpage.activity-stream.telemetry.structuredIngestion.endpoint" =
-            "";
+          "browser.newtabpage.activity-stream.telemetry.structuredIngestion.endpoint" = "";
           "toolkit.telemetry.user_characteristics_ping.opt-out" = true;
           "browser.startup.couldRestoreSession.count" = 0;
           "browser.sessionstore.restore_tabs_lazily" = false;
@@ -89,8 +107,7 @@ in {
           "privacy.history.custom" = true;
 
           "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
-          "browser.newtabpage.activity-stream.feeds.discoverystreamfeed" =
-            false;
+          "browser.newtabpage.activity-stream.feeds.discoverystreamfeed" = false;
 
           "beacon.enabled" = false;
 
@@ -106,6 +123,15 @@ in {
           "browser.sessionstore.resume_from_crash" = false;
           "browser.pagethumbnails.capturing_disabled" = true;
 
+          # force the browser to use the certs provided by the os instead (more reliable on nixos)
+          "security.enterprise_roots.enabled" = true;
+
+          # apply fixed margin and padding around windows (like Tor Browser)
+          "privacy.resistFingerprinting.letterboxing" = true;
+
+          # CRLite is used instead
+          "security.OCSP.enabled" = false;
+
           "dom.security.https_only_mode" = true;
           "dom.security.https_only_mode_send_http_background_request" = false;
           "security.pki.sha1_enforcement_level" = 1;
@@ -113,8 +139,7 @@ in {
 
           "media.peerconnection.ice.no_host" = true;
 
-          "privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage" =
-            true;
+          "privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage" = true;
 
           "extensions.Screenshots.disabled" = true;
 
@@ -136,65 +161,70 @@ in {
           "browser.urlbar.suggest.openpage" = false;
           "browser.urlbar.suggest.topsites" = false;
           "browser.urlbar.autoFill" = false;
-        } // (if config.nixtra.display.themeType == "dark" then {
-          "ui.systemUsesDarkTheme" = true;
-          "layout.css.prefers-color-scheme.content-override" = 0;
-          "browser.devedition.theme.enabled" = true;
-          "devtools.theme" = "dark";
-        } else
-          { }) # In case of websites not adhering to system theme
-          // {
-            #  NATURAL SMOOTH SCROLLING V4 "SHARP" - AveYo, 2020-2022             preset     [default]
-            #  copy into firefox/librewolf profile as user.js, add to existing, or set in about:config
-            "general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS" = 12;
-            "general.smoothScroll.msdPhysics.enabled" = true;
-            "general.smoothScroll.msdPhysics.motionBeginSpringConstant" = 200;
-            "general.smoothScroll.msdPhysics.regularSpringConstant" = 250;
-            "general.smoothScroll.msdPhysics.slowdownMinDeltaMS" = 25;
-            "general.smoothScroll.msdPhysics.slowdownMinDeltaRatio" = "2.0";
-            "general.smoothScroll.msdPhysics.slowdownSpringConstant" = 250;
-            "general.smoothScroll.currentVelocityWeighting" = "1.0";
-            "general.smoothScroll.stopDecelerationWeighting" = "1.0";
+        }
+        // (
+          if config.nixtra.display.themeType == "dark" then
+            {
+              "ui.systemUsesDarkTheme" = true;
+              "layout.css.prefers-color-scheme.content-override" = 0;
+              "browser.devedition.theme.enabled" = true;
+              "devtools.theme" = "dark";
+            }
+          else
+            { }
+        ) # In case of websites not adhering to system theme
+        // {
+          #  NATURAL SMOOTH SCROLLING V4 "SHARP" - AveYo, 2020-2022             preset     [default]
+          #  copy into firefox/librewolf profile as user.js, add to existing, or set in about:config
+          "general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS" = 12;
+          "general.smoothScroll.msdPhysics.enabled" = true;
+          "general.smoothScroll.msdPhysics.motionBeginSpringConstant" = 200;
+          "general.smoothScroll.msdPhysics.regularSpringConstant" = 250;
+          "general.smoothScroll.msdPhysics.slowdownMinDeltaMS" = 25;
+          "general.smoothScroll.msdPhysics.slowdownMinDeltaRatio" = "2.0";
+          "general.smoothScroll.msdPhysics.slowdownSpringConstant" = 250;
+          "general.smoothScroll.currentVelocityWeighting" = "1.0";
+          "general.smoothScroll.stopDecelerationWeighting" = "1.0";
 
-            # adjust multiply factor for mousewheel - or set to false if scrolling is way too fast
-            "mousewheel.system_scroll_override.horizontal.factor" = 200;
-            "mousewheel.system_scroll_override.vertical.factor" = 200;
-            "mousewheel.system_scroll_override_on_root_content.enabled" = true;
-            "mousewheel.system_scroll_override.enabled" = true;
+          # adjust multiply factor for mousewheel - or set to false if scrolling is way too fast
+          "mousewheel.system_scroll_override.horizontal.factor" = 200;
+          "mousewheel.system_scroll_override.vertical.factor" = 200;
+          "mousewheel.system_scroll_override_on_root_content.enabled" = true;
+          "mousewheel.system_scroll_override.enabled" = true;
 
-            # adjust pixels at a time count for mousewheel - cant do more than a page at once if <100
-            "mousewheel.default.delta_multiplier_x" = 100;
-            "mousewheel.default.delta_multiplier_y" = 100;
-            "mousewheel.default.delta_multiplier_z" = 100;
+          # adjust pixels at a time count for mousewheel - cant do more than a page at once if <100
+          "mousewheel.default.delta_multiplier_x" = 100;
+          "mousewheel.default.delta_multiplier_y" = 100;
+          "mousewheel.default.delta_multiplier_z" = 100;
 
-            #  this preset will reset couple extra variables for consistency
-            "apz.allow_zooming" = true;
-            "apz.force_disable_desktop_zooming_scrollbars" = false;
-            "apz.paint_skipping.enabled" = true;
-            "apz.windows.use_direct_manipulation" = true;
-            "dom.event.wheel-deltaMode-lines.always-disabled" = false;
-            "general.smoothScroll.durationToIntervalRatio" = 200;
-            "general.smoothScroll.lines.durationMaxMS" = 150;
-            "general.smoothScroll.lines.durationMinMS" = 150;
-            "general.smoothScroll.other.durationMaxMS" = 150;
-            "general.smoothScroll.other.durationMinMS" = 150;
-            "general.smoothScroll.pages.durationMaxMS" = 150;
-            "general.smoothScroll.pages.durationMinMS" = 150;
-            "general.smoothScroll.pixels.durationMaxMS" = 150;
-            "general.smoothScroll.pixels.durationMinMS" = 150;
-            "general.smoothScroll.scrollbars.durationMaxMS" = 150;
-            "general.smoothScroll.scrollbars.durationMinMS" = 150;
-            "general.smoothScroll.mouseWheel.durationMaxMS" = 200;
-            "general.smoothScroll.mouseWheel.durationMinMS" = 50;
-            "layers.async-pan-zoom.enabled" = true;
-            "layout.css.scroll-behavior.spring-constant" = "250";
-            "mousewheel.transaction.timeout" = 1500;
-            "mousewheel.acceleration.factor" = 10;
-            "mousewheel.acceleration.start" = -1;
-            "mousewheel.min_line_scroll_amount" = 5;
-            "toolkit.scrollbox.horizontalScrollDistance" = 5;
-            "toolkit.scrollbox.verticalScrollDistance" = 3;
-          };
+          #  this preset will reset couple extra variables for consistency
+          "apz.allow_zooming" = true;
+          "apz.force_disable_desktop_zooming_scrollbars" = false;
+          "apz.paint_skipping.enabled" = true;
+          "apz.windows.use_direct_manipulation" = true;
+          "dom.event.wheel-deltaMode-lines.always-disabled" = false;
+          "general.smoothScroll.durationToIntervalRatio" = 200;
+          "general.smoothScroll.lines.durationMaxMS" = 150;
+          "general.smoothScroll.lines.durationMinMS" = 150;
+          "general.smoothScroll.other.durationMaxMS" = 150;
+          "general.smoothScroll.other.durationMinMS" = 150;
+          "general.smoothScroll.pages.durationMaxMS" = 150;
+          "general.smoothScroll.pages.durationMinMS" = 150;
+          "general.smoothScroll.pixels.durationMaxMS" = 150;
+          "general.smoothScroll.pixels.durationMinMS" = 150;
+          "general.smoothScroll.scrollbars.durationMaxMS" = 150;
+          "general.smoothScroll.scrollbars.durationMinMS" = 150;
+          "general.smoothScroll.mouseWheel.durationMaxMS" = 200;
+          "general.smoothScroll.mouseWheel.durationMinMS" = 50;
+          "layers.async-pan-zoom.enabled" = true;
+          "layout.css.scroll-behavior.spring-constant" = "250";
+          "mousewheel.transaction.timeout" = 1500;
+          "mousewheel.acceleration.factor" = 10;
+          "mousewheel.acceleration.start" = -1;
+          "mousewheel.min_line_scroll_amount" = 5;
+          "toolkit.scrollbox.horizontalScrollDistance" = 5;
+          "toolkit.scrollbox.verticalScrollDistance" = 3;
+        };
 
         extensions = {
           force = true;
@@ -225,12 +255,15 @@ in {
               #tranquility
               unpaywall
               #chameleon
-            ] ++ (if config.nixtra.display.themeType == "dark" then
-              [
-                inputs.firefox-addons.packages.${profileSettings.arch}.darkreader
-              ]
-            else
-              [ ]);
+            ]
+            ++ (
+              if config.nixtra.display.themeType == "dark" then
+                [
+                  inputs.firefox-addons.packages.${profileSettings.arch}.darkreader
+                ]
+              else
+                [ ]
+            );
 
           # You can find extension options by looking at the storage.js
           # files of the desired one:
@@ -478,7 +511,9 @@ in {
             # Firefox Multi-Account Containers
             "@testpilot-containers" = {
               force = true;
-              settings = { replaceTabEnabled = true; };
+              settings = {
+                replaceTabEnabled = true;
+              };
             };
 
             # Cookie AutoDelete
@@ -604,8 +639,7 @@ in {
 
                 # encoded version of https://gist.github.com/theprojectsomething/6813b2c27611be03e67c78d936b0f760
                 #chunkedUserStyleRules0 = builtins.readFile ./tst-theme-chunk.bin;
-                chunkedUserStyleRules0 =
-                  builtins.readFile ./theme2/chunks/1.bin;
+                chunkedUserStyleRules0 = builtins.readFile ./theme2/chunks/1.bin;
 
                 #chunkedUserStyleRules0 = builtins.readFile ./chunks/1.bin;
                 #chunkedUserStyleRules1 = builtins.readFile ./chunks/2.bin;
@@ -623,43 +657,54 @@ in {
           force = true;
           default = "SearXNG"; # DuckDuckGo Lite
           privateDefault = "SearXNG"; # DuckDuckGo Lite
-          order = [ "SearXNG" "DuckDuckGo Lite" "ddg" ];
+          order = [
+            "SearXNG"
+            "DuckDuckGo Lite"
+            "ddg"
+          ];
 
           engines = {
             "SearXNG" = {
-              urls = [{
-                template = "http://127.0.0.1:8888/search?q={searchTerms}";
-              }];
+              urls = [
+                {
+                  template = "http://127.0.0.1:8888/search?q={searchTerms}";
+                }
+              ];
               definedAliases = [ "@searx" ];
             };
             "DuckDuckGo Lite" = {
-              urls = [{
-                template = "https://start.duckduckgo.com/lite?q={searchTerms}";
-              }];
+              urls = [
+                {
+                  template = "https://start.duckduckgo.com/lite?q={searchTerms}";
+                }
+              ];
               definedAliases = [ "@ddgl" ];
             };
             "Nix Packages" = {
-              urls = [{
-                template = "https://search.nixos.org/packages";
-                params = [
-                  {
-                    name = "type";
-                    value = "packages";
-                  }
-                  {
-                    name = "query";
-                    value = "{searchTerms}";
-                  }
-                ];
-              }];
-              icon =
-                "''${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              urls = [
+                {
+                  template = "https://search.nixos.org/packages";
+                  params = [
+                    {
+                      name = "type";
+                      value = "packages";
+                    }
+                    {
+                      name = "query";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
+              icon = "''${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
               definedAliases = [ "@np" ];
             };
             "NixOS Wiki" = {
-              urls = [{
-                template = "https://nixos.wiki/index.php?search={searchTerms}";
-              }];
+              urls = [
+                {
+                  template = "https://nixos.wiki/index.php?search={searchTerms}";
+                }
+              ];
               icon = "https://nixos.wiki/favicon.png";
               updateInterval = 24 * 60 * 60 * 1000; # every day
               definedAliases = [ "@nw" ];
@@ -689,9 +734,7 @@ in {
 
     cp "$TARGET_FILE" "$TARGET_FILE.bak"
 
-    jq '.commands |= (. // {} ) + ${
-      builtins.toJSON extensionSettingsCommands
-    }' $TARGET_FILE > $TARGET_FILE.tmp && mv $TARGET_FILE.tmp $TARGET_FILE
+    jq '.commands |= (. // {} ) + ${builtins.toJSON extensionSettingsCommands}' $TARGET_FILE > $TARGET_FILE.tmp && mv $TARGET_FILE.tmp $TARGET_FILE
   '';
 
   home.file.".librewolf/default/chrome" = {
@@ -710,7 +753,7 @@ in {
 
   home.packages = [
     (nixtraLib.sandbox.wrapFirejail {
-      executable = "${pkgs.librewolf-bin}/bin/librewolf";
+      executable = "${pkgs.librewolf}/bin/librewolf";
       profile = "librewolf";
     })
   ];

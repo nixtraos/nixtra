@@ -1,4 +1,13 @@
-{ settings, profileSettings, lib, pkgs, nixtraLib, config, ... }:
+{
+  settings,
+  profileSettings,
+  lib,
+  pkgs,
+  nixtraLib,
+  config,
+  # osConfig, # Allows HM to read top-level NixOS module `config`
+  ...
+}:
 
 {
   imports = [

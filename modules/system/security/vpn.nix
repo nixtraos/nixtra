@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.nixtra.security.vpn;
@@ -6,7 +11,8 @@ let
     name = "mullvad-vpn";
     package = pkgs.mullvad-vpn;
   };
-in {
+in
+{
   config = lib.mkMerge [
     (lib.mkIf cfg.enable {
       networking.firewall.checkReversePath = "loose";
@@ -14,11 +20,10 @@ in {
     })
     (lib.mkIf (cfg.enable && cfg.type == "mullvad") {
 
-      environment.systemPackages = with pkgs;
-        [
-          #mullvad-autostart
-          cowsay
-        ];
+      environment.systemPackages = with pkgs; [
+        #mullvad-autostart
+        cowsay
+      ];
 
       services.mullvad-vpn = {
         enable = true;
@@ -53,17 +58,20 @@ in {
         interfaces = {
           wg0 = with config.sops; {
             ips = config.nixtra.security.vpn.addresses;
-            privateKeyFile =
-              config.sops.secrets."${config.nixtra.security.vpn.privateKey}".path;
+            privateKeyFile = config.sops.secrets."${config.nixtra.security.vpn.privateKey}".path;
             listenPort = 51820;
 
-            peers = [{
-              publicKey = config.nixtra.security.vpn.publicKey;
-              endpoint =
-                "${config.nixtra.security.vpn.endpointAddress}:${config.nixtra.security.vpn.endpointPort}";
-              allowedIPs = [ "0.0.0.0/0" "::0/0" ];
-              persistentKeepalive = 25;
-            }];
+            peers = [
+              {
+                publicKey = config.nixtra.security.vpn.publicKey;
+                endpoint = "${config.nixtra.security.vpn.endpointAddress}:${config.nixtra.security.vpn.endpointPort}";
+                allowedIPs = [
+                  "0.0.0.0/0"
+                  "::0/0"
+                ];
+                persistentKeepalive = 25;
+              }
+            ];
           };
         };
       };

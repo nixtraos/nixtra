@@ -2,6 +2,8 @@
 
 {
   config = lib.mkIf config.nixtra.performance.monitorServices {
-    services.monit = { enable = true; };
+    services.monit = {
+      enable = true;
+    };
   };
 }

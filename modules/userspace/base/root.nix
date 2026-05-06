@@ -1,4 +1,9 @@
-{ settings, profileSettings, config, ... }:
+{
+  settings,
+  profileSettings,
+  config,
+  ...
+}:
 
 {
   imports = [

@@ -1,15 +1,19 @@
 { lib, ... }:
 
 {
-  nixListToBashList = list:
+  nixListToBashList =
+    list:
     let
       quoted = map lib.escapeShellArg list;
       joined = builtins.concatStringsSep " " quoted;
-    in "(${joined})";
+    in
+    "(${joined})";
 
-  nixListToBashBraceExpansion = list:
+  nixListToBashBraceExpansion =
+    list:
     let
       quoted = map lib.escapeShellArg list;
       joined = builtins.concatStringsSep "," quoted;
-    in "{${joined}}";
+    in
+    "{${joined}}";
 }

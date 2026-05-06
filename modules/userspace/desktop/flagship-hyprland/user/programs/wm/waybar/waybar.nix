@@ -1,12 +1,19 @@
-{ config, nixtraLib, lib, pkgs, ... }:
+{
+  config,
+  nixtraLib,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   # Function to generate Waybar custom modules
-  mkAppModule = app:
+  mkAppModule =
+    app:
     let
-      program =
-        builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
-    in {
+      program = builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
+    in
+    {
       name = "custom/${program}";
       value = {
         format = "    ";
@@ -17,14 +24,16 @@ let
     };
 
   iconSize = builtins.toString config.nixtra.desktop.taskbar.iconSize;
-  scaledSize = builtins.toString (config.nixtra.desktop.taskbar.iconSize
-    + config.nixtra.desktop.taskbar.iconSize * 0.1);
+  scaledSize = builtins.toString (
+    config.nixtra.desktop.taskbar.iconSize + config.nixtra.desktop.taskbar.iconSize * 0.1
+  );
 
-  mkCssRule = app:
+  mkCssRule =
+    app:
     let
-      program =
-        builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
-    in ''
+      program = builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
+    in
+    ''
       #custom-${program} {
         background-image: url('/home/${config.nixtra.user.username}/.config/waybar/icons/${app.icon}');
         background-position: center;
@@ -71,17 +80,20 @@ let
   cssRules = hoverActiveCss + "\n" + customCssRules + "\n" + nixtraCssRule;
 
   # Generate the modules-center array
-  appModules = map (app:
+  appModules = map (
+    app:
     let
-      program =
-        builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
-    in "custom/${program}") apps;
+      program = builtins.unsafeDiscardStringContext (builtins.baseNameOf app.program);
+    in
+    "custom/${program}"
+  ) apps;
 
   script-ram-graph = pkgs.callPackage ./scripts/ram-graph.nix {
     inherit (nixtraLib.command) createCommand;
   };
   script-cpu-graph = "${./scripts/ram_graph.py}";
-in {
+in
+{
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
     programs.waybar = {
       settings = {
@@ -101,8 +113,11 @@ in {
             "custom/netspeed"
           ];
 
-          "modules-center" =
-            [ "custom/separator" "hyprland/workspaces" "custom/separator" ];
+          "modules-center" = [
+            "custom/separator"
+            "hyprland/workspaces"
+            "custom/separator"
+          ];
 
           "modules-right" = [
             "custom/record"
@@ -122,12 +137,17 @@ in {
 
           "hyprland/workspaces" = {
             format = "{icon}";
-            format-icons = lib.mkMerge ((lib.imap1
-              (i: workspace: { "${builtins.toString i}" = workspace.icon; })
-              config.nixtra.desktop.flagship-hyprland.workspaces) ++ [{
-                active = "";
-                default = "";
-              }]);
+            format-icons = lib.mkMerge (
+              (lib.imap1 (i: workspace: {
+                "${builtins.toString i}" = workspace.icon;
+              }) config.nixtra.desktop.flagship-hyprland.workspaces)
+              ++ [
+                {
+                  active = "";
+                  default = "";
+                }
+              ]
+            );
             "active-only" = false;
           };
 
@@ -155,8 +175,19 @@ in {
             waves = false;
             noise_reduction = 0.77;
             input_delay = 4;
-            format-icons = [ "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" ];
-            actions = { on-click-right = "mode"; };
+            format-icons = [
+              "▁"
+              "▂"
+              "▃"
+              "▄"
+              "▅"
+              "▆"
+              "▇"
+              "█"
+            ];
+            actions = {
+              on-click-right = "mode";
+            };
             sleep_timer = 2;
           };
 
@@ -175,7 +206,16 @@ in {
             return-type = "json";
             interval = 1;
             format = "{}";
-            format-icons = [ "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" ];
+            format-icons = [
+              "▁"
+              "▂"
+              "▃"
+              "▄"
+              "▅"
+              "▆"
+              "▇"
+              "█"
+            ];
             tooltip = true;
           };
 
@@ -203,8 +243,7 @@ in {
             name = "cwidget";
             format = "   ";
             on-click = "/run/current-system/sw/bin/nixtra-screenshot";
-            on-click-right =
-              "/run/current-system/sw/bin/nixtra-screenshot region";
+            on-click-right = "/run/current-system/sw/bin/nixtra-screenshot region";
             tooltip = false;
             interval = "once";
           };
@@ -213,10 +252,8 @@ in {
             name = "cwidget";
             exec = "/run/current-system/sw/bin/nixtra-record status";
             format = " {}";
-            on-click =
-              "/run/current-system/sw/bin/nixtra-record toggle fullscreen";
-            on-click-right =
-              "/run/current-system/sw/bin/nixtra-record toggle region";
+            on-click = "/run/current-system/sw/bin/nixtra-record toggle fullscreen";
+            on-click-right = "/run/current-system/sw/bin/nixtra-record toggle region";
             restart-interval = 1;
             return-type = "json";
             tooltip = true;
@@ -224,8 +261,7 @@ in {
 
           "custom/github" = {
             format = "  ";
-            on-click =
-              "${config.home.profileDirectory}/bin/librewolf https://github.com";
+            on-click = "${config.home.profileDirectory}/bin/librewolf https://github.com";
             tooltip = false;
             interval = "once";
           };
@@ -233,10 +269,8 @@ in {
           "custom/colour-temperature" = {
             format = "{} ";
             exec = "wl-gammarelay-rs watch {t}";
-            on-scroll-up =
-              "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n +100";
-            on-scroll-down =
-              "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n -100";
+            on-scroll-up = "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n +100";
+            on-scroll-down = "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n -100";
           };
 
           #"custom/gpu" = {
@@ -268,7 +302,11 @@ in {
             format = "{volume}% {icon}";
             format-muted = "";
             on-click = "helvum";
-            format-icons = [ "" "" "" ];
+            format-icons = [
+              ""
+              ""
+              ""
+            ];
           };
 
           temperature = {
@@ -277,7 +315,11 @@ in {
             hwmon-path = "/sys/class/hwmon/hwmon1/temp1_input";
             critical-threshold = 83;
             format = "{icon} {temperatureC}°C";
-            format-icons = [ "" "" "" ];
+            format-icons = [
+              ""
+              ""
+              ""
+            ];
             interval = 10;
           };
 
@@ -286,7 +328,9 @@ in {
           #  on-click = "${../../../scripts/keyboardswitch.sh}";
           #};
 
-          clock = { format = " {:%H:%M}"; };
+          clock = {
+            format = " {:%H:%M}";
+          };
 
           # Power buttons
           "custom/suspend" = {
@@ -340,16 +384,17 @@ in {
 
           "custom/nixtra" = {
             format = "    ";
-            on-click =
-              "${config.nixtra.user.browser} https://github.com/quarterstar/nixtra";
+            on-click = "${config.nixtra.user.browser} https://github.com/quarterstar/nixtra";
             tooltip = false;
           };
-        } // customModules;
+        }
+        // customModules;
       };
     };
 
     xdg.configFile."waybar/config-top".text =
-      builtins.toJSON config.programs.waybar.settings."config-top";
+      builtins.toJSON
+        config.programs.waybar.settings."config-top";
     xdg.configFile."waybar/config-top.css".text = ''
       @define-color base   #1e1e2e;
       @define-color mantle #181825;
@@ -745,7 +790,8 @@ in {
       }
     '';
     xdg.configFile."waybar/config-bottom".text =
-      builtins.toJSON config.programs.waybar.settings."config-bottom";
+      builtins.toJSON
+        config.programs.waybar.settings."config-bottom";
     xdg.configFile."waybar/config-bottom.css".text = ''
       * {
           /* `otf-font-awesome` is required to be installed for icons */
@@ -911,11 +957,31 @@ in {
       #privacy-item.audio-out {
           background-color: #0069d4;
       }
-    '' + "\n" + cssRules;
+    ''
+    + "\n"
+    + cssRules;
 
     xdg.configFile."waybar/icons" = {
       source = ./icons;
       recursive = true;
+    };
+
+    # NOTE:When Waybar starts, it attempts to connect to Hyprland via IPC socket, and sometimes,
+    # it initializes before the socket is ready to report the workspace tree; as a result, the
+    # hyprland/workspaces module fails to populate its list and defaults to showing only the active
+    # icon in those cases (in this setup, a circle).
+    #
+    # We fix this by creating this service and starting it only after graphical session is initialized. (Alternatively, we could use a small sleep delay in the original exec-once).
+    systemd.user.services.waybar = lib.mkIf config.nixtra.desktop.topbar.enable {
+      Unit = {
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
+      };
+      Service = {
+        ExecStart = "${pkgs.waybar}/bin/waybar -c /home/${config.nixtra.user.username}/.config/waybar/config-top -s /home/${config.nixtra.user.username}/.config/waybar/config-top.css";
+        Restart = "on-failure";
+      };
+      Install.WantedBy = [ "graphical-session.target" ];
     };
   };
 }

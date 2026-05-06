@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   inherit (config.nixtra.user) username;
@@ -18,19 +23,19 @@ let
     echo "SMARTD_DEVICESTRING: $SMARTD_DEVICESTRING"
     echo "SMARTD_MESSAGE: $SMARTD_MESSAGE"
 
-    export XDG_RUNTIME_DIR="/run/user/${
-      builtins.toString config.nixtra.user.uid
-    }"
-    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${
-      builtins.toString config.nixtra.user.uid
-    }/bus"
+    export XDG_RUNTIME_DIR="/run/user/${builtins.toString config.nixtra.user.uid}"
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${builtins.toString config.nixtra.user.uid}/bus"
 
     #USERNAME="${username}" UID="${uid}" runuser -u ${username} -- ${pkgs.libnotify}/bin/notify-send -u critical "$SMARTD_DEVICESTRING" "$SMARTD_MESSAGE"
   '';
 
   cfg = config.nixtra.disk;
-  disks = [ cfg.partitions.boot cfg.partitions.storage ];
-in {
+  disks = [
+    cfg.partitions.boot
+    cfg.partitions.storage
+  ];
+in
+{
   config = lib.mkIf config.nixtra.performance.monitorDeviceHealth {
     systemd.user.services."smartd-notify@.service" = {
       enable = true;
@@ -44,11 +49,12 @@ in {
       enable = true;
       notifications.test = true;
       autodetect = true;
-      devices = (map (device: {
-        inherit device;
-        options =
-          "-m <nomailer> -M exec ${notifScriptInit}/bin/smartd-notify-init.sh";
-      }) disks);
+      devices = (
+        map (device: {
+          inherit device;
+          options = "-m <nomailer> -M exec ${notifScriptInit}/bin/smartd-notify-init.sh";
+        }) disks
+      );
     };
   };
 }

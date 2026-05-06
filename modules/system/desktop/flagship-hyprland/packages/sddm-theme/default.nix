@@ -1,5 +1,13 @@
-{ lib, qtbase, qtsvg, qtgraphicaleffects, qtquickcontrols2, wrapQtAppsHook
-, stdenvNoCC, fetchFromGitHub }:
+{
+  lib,
+  qtbase,
+  qtsvg,
+  qtgraphicaleffects,
+  qtquickcontrols2,
+  wrapQtAppsHook,
+  stdenvNoCC,
+  fetchFromGitHub,
+}:
 
 stdenvNoCC.mkDerivation rec {
   pname = "tokyo-night-sddm";
@@ -8,11 +16,15 @@ stdenvNoCC.mkDerivation rec {
   src = ./.;
   nativeBuildInputs = [ wrapQtAppsHook ];
 
-  propagatedUserEnvPkgs = [ qtbase qtsvg qtgraphicaleffects qtquickcontrols2 ];
+  propagatedUserEnvPkgs = [
+    qtbase
+    qtsvg
+    qtgraphicaleffects
+    qtquickcontrols2
+  ];
 
   installPhase = ''
     mkdir -p $out/share/sddm/themes
     cp -aR $src $out/share/sddm/themes/tokyo-night-sddm
   '';
 }
-

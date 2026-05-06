@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   config = lib.mkIf config.nixtra.security.closeOnSuspend.enable {
@@ -8,10 +13,7 @@
         #!/usr/bin/env bash
 
         # List of applications to kill
-        APPS=(${
-          lib.strings.concatStringsSep " "
-          config.nixtra.security.closeOnSuspend.applications
-        })
+        APPS=(${lib.strings.concatStringsSep " " config.nixtra.security.closeOnSuspend.applications})
 
         # Kill each application
         for app in "''${APPS[@]}"; do

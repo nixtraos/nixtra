@@ -1,5 +1,16 @@
-{ config, settings, profilePreset, profileSettings, timestamp, lib, pkgs
-, unstable-pkgs, inputs, ... }:
+{
+  config,
+  settings,
+  profilePreset,
+  profileSettings,
+  timestamp,
+  lib,
+  pkgs,
+  unstable-pkgs,
+  inputs,
+  hostName,
+  ...
+}:
 
 let
   # Note for beginners:
@@ -7,67 +18,145 @@ let
   # expression, typically with a specific system and overlays applied.
   # e.g., pkgs = import <nixpkgs> { system = "x86_64-linux"; };
 
-  currentTimestamp = lib.readFile
-    "${pkgs.runCommand "timestamp" { } "date +%Y-%m-%d_%H-%M-%S > $out"}";
+  currentTimestamp = lib.readFile "${pkgs.runCommand "timestamp" { }
+    "date +%Y-%m-%d_%H-%M-%S > $out"
+  }";
 
   modulesPath = "${inputs.nixpkgs}/nixos/modules";
 
   nixtraLib = import ../lib/lib.nix { inherit config lib pkgs; };
 
+  # ================
+  # REFLECTION UTILS
+  # ================
+
+  extractDefaults =
+    attrs:
+    let
+      mapped = lib.mapAttrs (
+        n: v:
+        if lib.isOption v then
+          v.default or null
+        else if builtins.isAttrs v then
+          extractDefaults v
+        else
+          v
+      ) attrs;
+    in
+    mapped;
+  # # Filter out the nulls so we don't pass them to the module system
+  # lib.filterAttrs (n: v: v != null && v != { }) mapped;
+
+  diffAttrs =
+    base: new:
+    lib.listToAttrs (
+      lib.concatMap (
+        name:
+        let
+          baseVal = base.${name} or null;
+          newVal = new.${name};
+        in
+        if base ? ${name} && baseVal == newVal then
+          [ ] # Skip: identical to default
+        else if builtins.isAttrs newVal && builtins.isAttrs baseVal then
+          let
+            diff = diffAttrs baseVal newVal;
+          in
+          if diff == { } then
+            [ ]
+          else
+            [
+              {
+                inherit name;
+                value = diff;
+              }
+            ]
+        else
+          [
+            {
+              inherit name;
+              value = newVal;
+            }
+          ] # Keep: modified or new
+      ) (builtins.attrNames new)
+    );
+
+  # ===============
+  # CONFIG PIPELINE
+  # ===============
+
+  # Preliminary Stage: Load Defaults from options.nix
+  rawOptions = import ../options.nix {
+    inherit
+      config
+      lib
+      pkgs
+      settings
+      ;
+  };
+  nixtraDefaults = extractDefaults rawOptions.options.nixtra;
+
   # Stage 1: Preset integration
   # Stage 2: Profile integration
-  basicNixtra = (import ../../presets/${profileSettings.preset}/profile.nix {
-    inherit pkgs config;
-  }) // (import ../../profiles/${settings.profile}/profile.nix {
-    inherit pkgs config;
-  });
+  basicNixtra =
+    lib.recursiveUpdate
+      (import ../../presets/${profileSettings.preset}/profile.nix {
+        inherit pkgs config;
+      })
+      (
+        import ../../profiles/${settings.profile}/profile.nix {
+          inherit pkgs config;
+        }
+      );
+
+  # Stage 2.5: Full Basic Nixtra (Defaults + User overrides)
+  fullBasicNixtra = lib.recursiveUpdate nixtraDefaults basicNixtra;
 
   # Stage 3: Reflection
-  reflectedNixtra = basicNixtra // (import ./reflection.nix {
-    nixtra = basicNixtra;
-    inherit pkgs;
-  });
+  reflectedNixtra = lib.recursiveUpdate fullBasicNixtra (
+    import ./reflection.nix {
+      nixtra = fullBasicNixtra;
+      inherit pkgs;
+      inherit lib;
+    }
+  );
 
   # Stage 4: Logical validation
-  nixtra = reflectedNixtra
-    // (import ./validation.nix { nixtra = reflectedNixtra; });
-in {
+  validatedNixtra = lib.recursiveUpdate reflectedNixtra (
+    import ./validation.nix { nixtra = reflectedNixtra; }
+  );
+
+  # Stage 5: Minimization
+  # FIXME: recursion error
+  # nixtra = diffAttrs nixtraDefaults validatedNixtra;
+  nixtra = validatedNixtra;
+
+in
+{
   imports = [
     inputs.home-manager.nixosModules.default
+
+    # Profile-based configuration
+    ../options.nix
+    (../../profiles + ("/" + settings.profile) + "/configuration.nix")
+    (../../presets + ("/" + profileSettings.preset) + "/configuration.nix")
 
     # Overlays
     ../overrides/overrides.nix
 
-    # Nixtra options and profile
-    ../options.nix
-
-    # Profile-based configuration
-    (../../profiles + ("/" + settings.profile) + "/configuration.nix")
-    (../../presets + ("/" + profileSettings.preset) + "/configuration.nix")
-
-    # Parts
     ./cpu/cpu.nix
     ./gpu/gpu.nix
-    ./audio/pipewire.nix
-    ./audio/pulseaudio.nix
-    ./server/wayland.nix
+    ./audio/audio.nix
+    ./server/server.nix
     ./shell/backend/backend.nix
     ./fs/fs.nix
     ./memory/memory.nix
     ./desktop/desktop.nix
     ./peripherals/peripherals.nix
     ./patches/patches.nix
-
-    # Include the results of the hardware scan.
-    ./hardware-configuration.nix
-
-    # Security
     ./security/security.nix
-    # FIXME: https://github.com/NixOS/nixpkgs/issues/360616
-    #"${modulesPath}/profiles/hardened.nix" # NixOS security hardening
-    "${inputs.nix-mineral}/nix-mineral.nix" # Complementary defaults for hardening for ones missed by security.nix and hardened.nix
-
-    # Performance
+    ./hardware-configuration.nix
+    ./security/security.nix
     ./performance/performance.nix
 
     # Networks
@@ -94,12 +183,34 @@ in {
     inherit nixtra;
 
     nix = {
+      # Fix slow DNS lookup by disabling Flake registry
+      # https://gist.github.com/Aleksanaa/458f4b9f9e638d9c75a60c80885054e8
+      settings.flake-registry = builtins.toFile "global-registry.json" (
+        builtins.toJSON {
+          "flakes" = [ ];
+          "version" = 2;
+        }
+      );
+      registry = (
+        {
+          pkgs.flake = inputs.self; # recommended
+        }
+        // lib.mapAttrs (names: flakes: { flake = flakes; }) inputs
+      );
+
       settings = {
         # Enable Flakes
-        experimental-features = [ "nix-command" "flakes" ];
+        experimental-features = [
+          "nix-command"
+          "flakes"
+        ];
         auto-optimise-store = true; # May make rebuilds longer but less size
-        substituters = config.nixtra.nix.caches;
-        trusted-public-keys = config.nixtra.nix.cachesKeys;
+        substituters =
+          if config.nixtra.nix.useBinaryCaches then config.nixtra.nix.caches else lib.mkForce [ ];
+        trusted-public-keys =
+          if config.nixtra.nix.useBinaryCaches then config.nixtra.nix.cachesKeys else [ ];
+        # https://github.com/nixos/nixpkgs/issues/20542#issuecomment-292702999
+        substitute = config.nixtra.nix.useBinaryCaches;
         #use-xdg-base-directories = true;
         warn-dirty = false;
         keep-outputs = true;
@@ -127,9 +238,8 @@ in {
     #system.copySystemConfiguration = true;
 
     # "Unsafe" packages
-    nixpkgs.config.allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg)
-      config.nixtra.security.permittedUnfreePackages;
+    nixpkgs.config.allowUnfreePredicate =
+      pkg: builtins.elem (lib.getName pkg) config.nixtra.security.permittedUnfreePackages;
     nixpkgs.config.permittedInsecurePackages =
       if !config.nixtra.security.networking then
         config.nixtra.security.permittedInsecurePackages
@@ -137,20 +247,16 @@ in {
         [ ];
 
     # Enable docker containers support
-    virtualisation.docker.enable =
-      lib.mkIf config.nixtra.security.virtualization true;
-    virtualisation.libvirtd.enable =
-      lib.mkIf config.nixtra.security.virtualization true;
+    virtualisation.docker.enable = lib.mkIf config.nixtra.security.virtualization true;
+    virtualisation.libvirtd.enable = lib.mkIf config.nixtra.security.virtualization true;
 
     # Define default shell for all users globally
-    users.defaultUserShell = pkgs.${config.nixtra.user.shell.backend};
+    users.defaultUserShell = pkgs.${config.nixtra.user.shell};
 
     # Enable networking
     networking.wireless.enable = false;
-    networking.networkmanager.enable =
-      lib.mkIf config.nixtra.security.networking true;
-    networking.networkmanager.ethernet.macAddress =
-      lib.mkIf config.nixtra.anonymity.spoofMacAddress "random";
+    networking.networkmanager.enable = lib.mkIf config.nixtra.security.networking true;
+    networking.networkmanager.ethernet.macAddress = lib.mkIf config.nixtra.anonymity.spoofMacAddress "random";
 
     # networking.hosts = {
     #   "127.0.0.1" = [ "localhost" profileSettings.hostname ];
@@ -160,30 +266,23 @@ in {
     # Spoof network host ID
     # MAY cause issues with ZFS
     # Causes issue with geoclue and other services
-    networking.hostId =
-      lib.mkIf config.nixtra.anonymity.spoofMiscIdentifiers "00000000";
+    networking.hostId = lib.mkIf config.nixtra.anonymity.spoofMiscIdentifiers "00000000";
 
     # The DNS servers to use
-    networking.nameservers =
-      lib.mkIf (!config.nixtra.security.vpn.enable) config.nixtra.network.dns;
-    services.resolved.fallbackDns =
-      lib.mkIf (!config.nixtra.security.vpn.enable) config.nixtra.network.dns;
+    networking.nameservers = lib.mkIf (!config.nixtra.security.vpn.enable) config.nixtra.network.dns;
+    services.resolved.fallbackDns = lib.mkIf (
+      !config.nixtra.security.vpn.enable
+    ) config.nixtra.network.dns;
 
     # Enable debug symbols for NixOS packages
     # to make them easier to troubleshoot
     environment.enableDebugInfo = true;
 
     # Set system's name
-    networking.hostName = if profileSettings.useHostnameProfilePrefix then
-      "${profileSettings.hostname}-${settings.profile}"
-    else
-      profileSettings.hostname;
+    networking.hostName = hostName;
 
     # Set timezone
-    time.timeZone = if !config.nixtra.system.timezone.auto then
-      config.nixtra.system.timezone
-    else
-      null;
+    time.timeZone = if !config.nixtra.system.timezone.auto then config.nixtra.system.timezone else null;
     services.automatic-timezoned.enable = config.nixtra.system.timezone.auto;
 
     # Select internationalisation properties.
@@ -203,11 +302,14 @@ in {
       nixd # Nix language server
     ];
 
-    programs.appimage = if config.nixtra.security.appimage then {
-      enable = true;
-      binfmt = true; # Enable binary format support
-    } else
-      { };
+    programs.appimage =
+      if config.nixtra.security.appimage then
+        {
+          enable = true;
+          binfmt = true; # Enable binary format support
+        }
+      else
+        { };
 
     xdg = {
       portal = {
@@ -216,57 +318,73 @@ in {
       };
     };
 
+    environment.variables = config.nixtra.shell.environmentVariables;
+
     # Configure home manager
-    home-manager = {
-      extraSpecialArgs = {
-        inherit nixtraLib;
-        inherit settings;
-        inherit profileSettings;
-        inherit inputs;
-        inherit unstable-pkgs;
+    home-manager =
+      let
+        createHomeUser = entrypoint: {
+          imports = [
+            entrypoint
+            { inherit (config) nixtra; }
+          ];
+        };
+      in
+      {
+        extraSpecialArgs = {
+          inherit nixtraLib;
+          inherit settings;
+          inherit profileSettings;
+          inherit inputs;
+          inherit unstable-pkgs;
+        };
+        useGlobalPkgs = true;
+        users = {
+          "user" = createHomeUser ../userspace/base/user.nix;
+          "root" = createHomeUser ../userspace/base/root.nix;
+        }; # // (builtins.listToAttrs (map (username: {
+        #  name = username;
+        #  value = import ../userspace/base/custom-user.nix {
+        #    inherit username;
+        #    inherit settings;
+        #  };
+        #}) config.nixtra.security.extraUsers));
+
+        # Automatically fix collisions
+        backupFileExtension = "hm.backup.${currentTimestamp}";
+
+        sharedModules = [
+          (import ../options.nix)
+          (import ./desktop/flagship-hyprland/options.nix)
+        ];
       };
-      useGlobalPkgs = true;
-      users = {
-        "user" = import ../userspace/base/user.nix;
-        "root" = import ../userspace/base/root.nix;
-      }; # // (builtins.listToAttrs (map (username: {
-      #  name = username;
-      #  value = import ../userspace/base/custom-user.nix {
-      #    inherit username;
-      #    inherit settings;
-      #  };
-      #}) config.nixtra.security.extraUsers));
-
-      # Automatically fix collisions
-      backupFileExtension = "hm.backup.${currentTimestamp}";
-
-      sharedModules = [
-        (import ../options.nix)
-        (import ./desktop/flagship-hyprland/options.nix)
-      ];
-    };
 
     # Define a user account.
     users.users = {
       ${config.nixtra.user.username} = {
         inherit (config.nixtra.user.uid)
-        ;
+          ;
         isNormalUser = true;
         extraGroups = config.nixtra.user.groups;
         linger = true;
 
-        hashedPasswordFile = lib.mkIf config.nixtra.user.declarativeUsers.enable
-          config.sops.secrets."${config.nixtra.user.declarativeUsers.passwordSecret}".path;
+        hashedPasswordFile =
+          lib.mkIf config.nixtra.user.declarativeUsers.enable
+            config.sops.secrets."${config.nixtra.user.declarativeUsers.passwordSecret}".path;
       };
-    } // (builtins.listToAttrs (map (username: {
-      name = username;
-      value = { isNormalUser = true; };
-    }) config.nixtra.security.extraUsers));
+    }
+    // (builtins.listToAttrs (
+      map (username: {
+        name = username;
+        value = {
+          isNormalUser = true;
+        };
+      }) config.nixtra.security.extraUsers
+    ));
 
     # This option defines the first version of NixOS you have installed on this particular machine,
     # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
     # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-    system.stateVersion =
-      config.nixtra.system.initialVersion; # Did you read the comment?
+    system.stateVersion = config.nixtra.system.initialVersion; # Did you read the comment?
   };
 }

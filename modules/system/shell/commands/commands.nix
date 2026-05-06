@@ -1,8 +1,20 @@
-{ nixtraLib, config, stdenv, lib, pkgs, ... }:
+{
+  nixtraLib,
+  config,
+  stdenv,
+  lib,
+  pkgs,
+  ...
+}:
 
-let inherit (nixtraLib.command) createCommand;
-in {
-  imports = [ ./sandman/sandman.nix ];
+let
+  inherit (nixtraLib.command) createCommand;
+in
+{
+  imports = [
+    ./sandman/sandman.nix
+    ./ai/ai.nix
+  ];
 
   config = lib.mkIf config.nixtra.shell.commands.enable {
     environment.systemPackages = [
@@ -36,8 +48,15 @@ in {
       (pkgs.callPackage ./theme/reset-cursor.nix {
         inherit config createCommand;
       })
-    ] ++ (import ./rebuild-other.nix {
-      inherit pkgs config createCommand nixtraLib lib;
+    ]
+    ++ (import ./rebuild-other.nix {
+      inherit
+        pkgs
+        config
+        createCommand
+        nixtraLib
+        lib
+        ;
     });
   };
 }

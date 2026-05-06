@@ -1,9 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
-  tokyo-night-sddm =
-    pkgs.libsForQt5.callPackage ../../packages/sddm-theme/default.nix { };
-in {
+  tokyo-night-sddm = pkgs.libsForQt5.callPackage ../../packages/sddm-theme/default.nix { };
+in
+{
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
     environment.systemPackages = with pkgs; [
       sddm-astronaut

@@ -30,17 +30,25 @@
     # ../pkgs/programming/ide/jetbrains.nix
     ../pkgs/programming/ide/codium.nix
     ../pkgs/api/insomnia.nix
-    ../pkgs/cli/tldr.nix
+    ../pkgs/manual/tldr.nix
+    ../pkgs/manual/cheat.nix
     ../pkgs/cli/git.nix
     ../pkgs/monitoring/htop.nix
     ../pkgs/editor/lunarvim.nix
     ../pkgs/editor/neovim.nix
+    ../pkgs/editor/neovide.nix
     ../pkgs/video/freetube.nix
     ../pkgs/audio/alsa.nix
     ../pkgs/re/ghidra.nix
     ../pkgs/sandbox/virt-manager.nix
     ../pkgs/lib/wxwidgets.nix
     ../pkgs/ai/ollama.nix
+    ../pkgs/ai/upscayl.nix
+    # FIXME
+    ../pkgs/ai/opencommit.nix
+    ../pkgs/ai/aichat.nix
+    ../pkgs/ai/oterm.nix
+    # ../pkgs/ai/comfyui.nix
     ../pkgs/forensics/binwalk.nix
     ../pkgs/forensics/volatility.nix
     ../pkgs/forensics/foremost.nix

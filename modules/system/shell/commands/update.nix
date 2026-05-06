@@ -4,9 +4,10 @@ createCommand {
   name = "update";
   buildInputs = [ ];
 
-  command = ''
-    nix-channel --update
-    nix flake update --flake /etc/nixos
-    ${config.nixtra.shell.commands.prefix}-rebuild
-  '';
+  command = # bash
+    ''
+      nix-channel --update
+      nix flake update --flake /etc/nixos
+      ${config.nixtra.shell.commands.prefix}-rebuild
+    '';
 }

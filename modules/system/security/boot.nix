@@ -1,7 +1,9 @@
 { config, lib, ... }:
 
-let cfg = config.nixtra.security.kernel;
-in {
+let
+  cfg = config.nixtra.security.kernel;
+in
+{
   config = lib.mkIf config.nixtra.security.protectBoot {
     # https://madaidans-insecurities.github.io/guides/linux-hardening.html#boot-parameters
     boot.kernelParams = [
@@ -38,44 +40,56 @@ in {
 
       # USB / device initialization lockdown (optional, breaks some keyboards / devices)
       #"usbcore.authorized_default=0"
-    ] ++ lib.optionals
-      (config.nixtra.hardware.cpu == "amd" && cfg.encryptMemory) [
-        # Memory encryption
-        "mem_encrypt=on"
-      ] ++ (if (!config.nixtra.debug.doVerboseKernelLogs) then [
-        "mce=0"
-        "quiet"
-        "loglevel=0"
-      ] else
-        [ "loglevel=7" ])
-      ++ lib.optionals config.nixtra.security.kernel.aggressivePanic [
-        # certain exploits cause an "oops", this makes the kernel panic if an "oops" occurs
-        "oops=panic"
-      ] ++ lib.optionals cfg.mitigateCommonVulnerabilities [
-        # CPU mitigations & SMT handling (extreme: disable SMT)
-        # this will make it so that your pc restarts automatically
-        # if a kernel panic were to occur
-        "mitigations=auto,nosmt" # enforce mitigations and disable SMT if needed
+    ]
+    ++
+      lib.optionals
+        # TODO: check if this causes freezes
+        (config.nixtra.hardware.cpu == "amd" && cfg.encryptMemory)
+        [
+          # Memory encryption
+          "mem_encrypt=on"
+        ]
+    ++ (
+      if (!config.nixtra.debug.doVerboseKernelLogs) then
+        [
+          "mce=0"
+          "quiet"
+          "loglevel=0"
+        ]
+      else
+        [ "loglevel=7" ]
+    )
+    ++ lib.optionals config.nixtra.security.kernel.aggressivePanic [
+      # certain exploits cause an "oops", this makes the kernel panic if an "oops" occurs
+      "oops=panic"
+    ]
+    ++ lib.optionals cfg.mitigateCommonVulnerabilities [
+      # CPU mitigations & SMT handling (extreme: disable SMT)
+      # this will make it so that your pc restarts automatically
+      # if a kernel panic were to occur
+      "mitigations=auto,nosmt" # enforce mitigations and disable SMT if needed
 
-        # defend against common cpu vulnerabilities
-        "spectre_v2=on"
-        "spec_store_bypass_disable=on"
-        "tsx=off"
-        "tsx_async_abort=full,nosmt"
-        "mds=full,nosmt"
-        "l1tf=full,force"
-        "nosmt=force"
-      ] ++ lib.optionals cfg.enforceDmaProtection [
-        # Runtime DMA protection / IOMMU
-        "intel_iommu=on,igfx_off"
-        "iommu.passthrough=0" # force DMA translations (avoid passthrough-by-default)
-      ] ++ lib.optionals cfg.requireSignatures [
-        # only alows kernel modules that have been signed with a valid key to be loaded
-        # making it harder to load malicious kernel modules
-        # can make VirtualBox or Nvidia drivers unusable
-        "module.sig_enforce=1"
-      ] ++ lib.optionals (config.nixtra.hardware.cpu == "intel")
-      [ "intel_pstate=disable" ];
+      # defend against common cpu vulnerabilities
+      "spectre_v2=on"
+      "spec_store_bypass_disable=on"
+      "tsx=off"
+      "tsx_async_abort=full,nosmt"
+      "mds=full,nosmt"
+      "l1tf=full,force"
+      "nosmt=force"
+    ]
+    ++ lib.optionals cfg.enforceDmaProtection [
+      # Runtime DMA protection / IOMMU
+      "intel_iommu=on,igfx_off"
+      "iommu.passthrough=0" # force DMA translations (avoid passthrough-by-default)
+    ]
+    ++ lib.optionals cfg.requireSignatures [
+      # only alows kernel modules that have been signed with a valid key to be loaded
+      # making it harder to load malicious kernel modules
+      # can make VirtualBox or Nvidia drivers unusable
+      "module.sig_enforce=1"
+    ]
+    ++ lib.optionals (config.nixtra.hardware.cpu == "intel") [ "intel_pstate=disable" ];
 
     # https://madaidans-insecurities.github.io/guides/linux-hardening.html#kasr-kernel-modules
     boot.blacklistedKernelModules = [
@@ -117,10 +131,8 @@ in {
       # vivid driver is only useful for testing purposes and has been the
       # cause of privilege escalation vulnerabilities
       # "vivid"
-    ] ++ (if config.nixtra.security.disableUsbStorage then
-      [ "usb_storage" ]
-    else
-      [ ]);
+    ]
+    ++ (if config.nixtra.security.disableUsbStorage then [ "usb_storage" ] else [ ]);
 
     # use hardened_malloc allocator
     # system-wide (global) memory allocator: options are

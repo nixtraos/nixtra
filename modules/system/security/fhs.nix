@@ -1,6 +1,12 @@
 # https://github.com/wochap/nix-config/blob/main/modules/nixos/system/fhs-compat/default.nix
 
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
   imports = [ inputs.nix-ld.nixosModules.nix-ld ];

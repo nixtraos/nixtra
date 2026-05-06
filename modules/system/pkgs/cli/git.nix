@@ -1,4 +1,9 @@
-{ config, pkgs, nixtraLib, ... }:
+{
+  config,
+  pkgs,
+  nixtraLib,
+  ...
+}:
 
 let
   post-commit-hook = pkgs.writeScript "pre-commit" ''
@@ -77,7 +82,8 @@ let
 
     echo "Redacted time information for $(( $(echo "$COMMITS_TO_REDACT" | wc -l) + 1 )) commits"
   '';
-in {
+in
+{
   environment.systemPackages = with pkgs; [
     (nixtraLib.sandbox.wrapFirejail {
       executable = "${pkgs.git}/bin/git";
@@ -90,22 +96,33 @@ in {
 
   programs.git.enable = true;
   programs.git.config = {
-    commit = { gpgsign = config.nixtra.git.signCommits; };
+    commit = {
+      gpgsign = config.nixtra.git.signCommits;
+    };
 
-    http = if config.nixtra.git.proxy.enable then {
-      proxy = config.nixtra.git.proxy.address;
-    } else
-      { };
+    http =
+      if config.nixtra.git.proxy.enable then
+        {
+          proxy = config.nixtra.git.proxy.address;
+        }
+      else
+        { };
 
-    https = if config.nixtra.git.proxy.enable then {
-      proxy = config.nixtra.git.proxy.address;
-    } else
-      { };
+    https =
+      if config.nixtra.git.proxy.enable then
+        {
+          proxy = config.nixtra.git.proxy.address;
+        }
+      else
+        { };
 
-    init = if config.nixtra.git.randomizeCommitDate then {
-      templateDir = "/etc/git-templates";
-    } else
-      { };
+    init =
+      if config.nixtra.git.randomizeCommitDate then
+        {
+          templateDir = "/etc/git-templates";
+        }
+      else
+        { };
 
     # Force ISO 8601 format for date parsing
     log.date = "iso-strict";

@@ -1,4 +1,10 @@
-{ buildGoModule, fetchFromGitHub, lib, unstableGitUpdater, writeText, }:
+{
+  buildGoModule,
+  fetchFromGitHub,
+  lib,
+  unstableGitUpdater,
+  writeText,
+}:
 buildGoModule {
   pname = "apparmor-d";
   version = "unstable-2025-05-27";
@@ -85,7 +91,10 @@ buildGoModule {
     '')
   ];
 
-  subPackages = [ "cmd/prebuild" "cmd/aa-log" ];
+  subPackages = [
+    "cmd/prebuild"
+    "cmd/aa-log"
+  ];
 
   passthru.updateScript = unstableGitUpdater { };
 

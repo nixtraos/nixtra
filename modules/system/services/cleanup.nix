@@ -1,7 +1,9 @@
 { config, pkgs, ... }:
 
-let userConfig = config.users.users.${config.nixtra.user.username};
-in {
+let
+  userConfig = config.users.users.${config.nixtra.user.username};
+in
+{
   systemd.services.user-cache-cleanup = {
     description = "Clean user cache directory on shutdown";
     after = [ "multi-user.target" ];

@@ -1,11 +1,19 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-using-usbguard
   config = lib.mkIf config.nixtra.security.protectUsbStorage {
     services.usbguard = {
       enable = true;
-      IPCAllowedUsers = [ "root" "your-user" ];
+      IPCAllowedUsers = [
+        "root"
+        "your-user"
+      ];
       # presentDevicePolicy refers to how to treat USB devices that are already connected when the daemon starts
       presentDevicePolicy = "allow";
       rules = ''

@@ -1,11 +1,18 @@
 # https://discourse.nixos.org/t/guide-to-installing-qt-theme/35523/2
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   config = lib.mkIf (config.nixtra.user.desktop == "flagship-hyprland") {
-    environment.systemPackages = with pkgs;
-      with qt6; [
+    environment.systemPackages =
+      with pkgs;
+      with qt6;
+      [
         libsForQt5.qtstyleplugin-kvantum
         libsForQt5.qt5ct
         qmake
