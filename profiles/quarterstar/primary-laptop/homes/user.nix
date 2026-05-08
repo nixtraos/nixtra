@@ -8,6 +8,7 @@
 
 {
   imports = [
+    ../../../../modules/userspace/bundles/basic.nix
     ../../../../modules/userspace/bundles/programming.nix
     ../../../../modules/userspace/bundles/mathematics.nix
 

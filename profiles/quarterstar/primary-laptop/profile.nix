@@ -2,20 +2,24 @@
 
 {
   hardware = {
-    cpu = "amd";
+    cpu = "intel";
     gpu = "nvidia";
   };
 
   disk = {
     partitions = {
-      boot = "/dev/disk/by-uuid/12CE-A600";
-      storage = "/dev/disk/by-uuid/75f7fad7-0065-49a1-950c-ba5913eeae83";
+      boot = "/dev/disk/by-label/boot";
+      storage = "/dev/disk/by-uuid/1ee27263-3474-4a4a-b253-5712034dfec3";
     };
 
     encryption = {
       enable = true;
-      decryptedRootDevice = "/dev/disk/by-uuid/ce341f6f-8daf-43d0-a034-901c93654118";
+      decryptedRootDevice = "/dev/disk/by-uuid/3fdcc37a-0ba2-41bc-9bc5-b9f3160a0206";
     };
+  };
+
+  user = {
+    terminal = "alacritty";
   };
 
   desktop = {
@@ -75,6 +79,10 @@
 
   searx = {
     secretPath = "searx/secret";
+  };
+
+  syncthing = {
+    enable = true;
   };
 
   ai = {

@@ -1,7 +1,12 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   imports = [
+    (import ../common/system/syncthing.nix {
+      localMachine = "desktop";
+      inherit lib;
+    })
+
     ./untracked.nix
 
     # Bundles
