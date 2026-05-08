@@ -12,5 +12,6 @@
     ./scheduling/tasks.nix
     ./virtualization/virtualization.nix
     ./container/container.nix
+    ./synchronization/synchronization.nix
   ];
 }

@@ -11,6 +11,7 @@
     ../global/prelude.nix
 
     ./programs/terminal/kitty.nix
+    ./programs/terminal/alacritty.nix
     ./programs/terminal/tmux.nix
     ./programs/wm/hyprland/hypr.nix
     ./programs/wm/rofi.nix

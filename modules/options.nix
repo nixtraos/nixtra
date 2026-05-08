@@ -1348,6 +1348,12 @@ in
           "Environment variables that should be kept from the environment of the user who is executing the sudo command and forwarded to the root user's new environment, with the same values.";
     };
 
+    syncthing = {
+      enable =
+        mkNixtraOption lib.types.bool false
+          "Whether to enable peer-to-peer synchronization of the fileesystem with the syncthing service";
+    };
+
     fun = {
       mysteriousFortuneCookie = mkNixtraOption lib.types.bool true "Would You Like To Have Some Fun?";
     };

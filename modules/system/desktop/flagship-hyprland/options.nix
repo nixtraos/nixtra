@@ -67,7 +67,7 @@ in
           icon = "";
           classes = [
             "kitty"
-            "alacritty"
+            "Alacritty"
           ];
         }
         {

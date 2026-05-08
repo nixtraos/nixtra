@@ -21,6 +21,10 @@
     }
     // config.nixtra.shell.environmentVariables;
 
+    home.packages = with pkgs; [
+      dconf
+    ];
+
     systemd.user.sessionVariables = config.nixtra.shell.environmentVariables;
 
     # Enable automatic management of directories specified in the XDG specification
