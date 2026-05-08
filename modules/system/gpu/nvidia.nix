@@ -17,7 +17,9 @@
     services.xserver.videoDrivers = [ "nvidia" ];
 
     hardware.nvidia = {
-      open = true;
+      open = false;
+
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
 
       modesetting = true;
       powerManagement = lib.mkIf config.nixtra.hardware.laptop {
@@ -42,7 +44,7 @@
         # nix-shell -p pciutils --run "lspci | grep -i vga\|3d\|display"
         # You must convert the hex numbers before the colon into decimal integers for NixOS. For example:
         # E.g., if lspci shows 01:00.0, write "PCI:1:0:0"
-        #nvidiaBusId = "PCI:1:0:0";
+        nvidiaBusId = "PCI:1:0:0";
 
         # Uncomment the correct line for your integrated GPU:
         #intelBusId = "PCI:0:2:0";
@@ -66,6 +68,16 @@
     };
 
     # Required for NVIDIA Wayland support
-    boot.kernelParams = [ "nvidia-drm.modeset=1" ];
+    boot = {
+      kernelParams = [ "nvidia-drm.modeset=1" ];
+      kernelModules = [
+        "nvidia"
+        "nvidia_modeset"
+        "nvidia_uvm"
+        "nvidia_drm"
+      ];
+    };
+
+    nixpkgs.config.allowUnfree = true;
   };
 }
